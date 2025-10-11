@@ -25,18 +25,18 @@ export let details={
             cgpa: "8.0",
         },
     ],
-    skills: ["JavaScript", "React", "Node.js", "CSS", "HTML"],
+    skills: "JavaScript, React, Node.js, CSS, HTML",
     projects: [
         {
             title: "Portfolio Website",
             description: "A personal portfolio website to showcase my projects and skills.",
-            technologies: ["React", "CSS", "Netlify"],
+            technologies: "React CSS Netlify",
             link: "https://johndoeportfolio.com",
         },
         {
             title: "Task Manager App",
             description: "A web application to manage daily tasks and to-dos.",
-            technologies: ["Node.js", "Express", "MongoDB"],
+            technologies: "Node.js Express MongoDB",
             link: "https://johndoetaskmanager.com",
         },
     ],
@@ -45,12 +45,8 @@ export let details={
             title: "Certified JavaScript Developer",
             issuer: "JavaScript Institute",
             year: "2020",
-        },
-        {
-            title: "React Professional Certification",
-            issuer: "React Training",
-            year: "2021",
+            link: "https://www.javascriptinstitute.org/certified-javascript-developer",
         },
     ],
-    languages: ["English", "Spanish"],
+    languages: "English, Spanish",
 }

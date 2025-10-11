@@ -1,5 +1,9 @@
 import "../App.css";
 import { useState } from "react";
+import { FaExternalLinkAlt,FaLinkedin,FaGithubSquare } from "react-icons/fa";
+import { IoCall } from "react-icons/io5";
+import { MdEmail } from "react-icons/md";
+
 export default function ResumePreview({ formData}) {
   const [hasExperience, setHasExperience] = useState(true);
 
@@ -12,13 +16,25 @@ export default function ResumePreview({ formData}) {
       <div className="flex flex-col gap-2">
         <h1 className="text-center font-link text-3xl font-bold">{formData.name}</h1>
         <div className="flex gap-2 justify-center font-semibold font-link">
-          <a href={`mailto:${formData.email}`}>{formData.email}</a>
+          <div className="flex items-center">
+            <MdEmail className="inline" />
+            <a href={`mailto:${formData.email}`}>{formData.email}</a>
+          </div>
           <p>|</p>
-          <a href={`tel:${formData.phone}`}>{formData.phone}</a>
+          <div className="flex items-center">
+            <IoCall className="inline" />
+            <a href={`tel:${formData.phone}`}>{formData.phone}</a>
+          </div>
           <p>|</p>
-          <a href={formData.linkedIn}>LinkedIn</a>
+          <div className="flex items-center">
+            <a className="" href={formData.linkedIn}>LinkedIn </a>
+          <FaLinkedin className="inline " />
+          </div>
           <p>|</p>
-          <a href={formData.github}>GitHub</a>
+          <div className="flex items-center">
+            <a className="" href={formData.github}>GitHub </a>
+            <FaGithubSquare className="inline " />
+          </div>
         </div>
         <div className="p-2">
           <h2 className="font-link text-2xl">Education</h2>
@@ -47,8 +63,9 @@ export default function ResumePreview({ formData}) {
                 <div key={index} className="mb-2">
                   <h3 className="font-semibold">{project.title}</h3>
                   <p>{project.description}</p>
-                  <p className="italic">Technologies: {project.technologies.join(", ")}</p>
-                  <a href={project.link}>Project Link</a>
+                  <p className="italic">Technologies: {project.technologies}</p>
+                  <a className="underline underline-offset-2 " href={project.link}>Project Link <FaExternalLinkAlt className="inline" />
+                  </a>
                 </div>
               )
             })}
@@ -56,7 +73,7 @@ export default function ResumePreview({ formData}) {
         </div>
         {hasExperience ? (
           <div>
-            <h2>Experience</h2>
+            <h2 className="font-link text-2xl">Experience</h2>
             <hr />
             <div>
               {formData.experience.map((exp, index) => (
@@ -74,6 +91,33 @@ export default function ResumePreview({ formData}) {
             </div>
           </div>
         ) : ''}
+        <div>
+          <h2 className="font-link text-2xl">Skills</h2>
+          <hr />
+          <div>
+            <p>{formData.skills}</p>
+          </div>
+          <div className="flex">
+            <p className="font-bold">Languages :</p>
+            <p className="px-1">{formData.languages}</p>
+          </div>
+        </div>
+        <div>
+          <h2 className="font-link text-2xl">Certifications</h2>
+          <hr />
+          <div>
+            {formData.certifications.map((cert, index) => (
+              <div key={index} className="mb-2">
+                <h3 className="font-semibold">{cert.title}</h3>
+                <p>{cert.issuer}</p>
+                <p>{cert.year}</p>
+                <a className="underline underline-offset-2 " href={cert.link}>Certification Link
+                  <FaExternalLinkAlt className="inline" />
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

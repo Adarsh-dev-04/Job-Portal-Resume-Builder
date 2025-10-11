@@ -1,4 +1,8 @@
 @import "tailwindcss";
+*{
+    font-family: 'CMU Serif Roman', serif;
+}
+
 .font-link{
     font-family: 'CMU Serif Roman', serif;
 }

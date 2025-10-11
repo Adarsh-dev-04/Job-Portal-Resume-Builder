@@ -2,7 +2,7 @@ import "../App.css";
 export default function ResumeForm({ formData, setFormData }) {
   let educationCount = formData.education.length;
   let experienceCount = formData.experience.length;
-
+  let projectCount = formData.projects.length;
   let inputBoxExperienceStyle =
     "text-white bg-black border-2 border-black px-2 py-1 w-150 rounded-sm";
 
@@ -30,6 +30,16 @@ export default function ResumeForm({ formData, setFormData }) {
     }
 
     setFormData({...formData, experience : [...formData.experience , newExperience]})
+  }
+
+  function handleAddProject(){
+    const newProject = {
+      title : "",
+      link : "",
+      description : []
+    };
+
+    setFormData({...formData, projects : [...formData.projects , newProject]})
   }
 
   let inputBoxStyle =
@@ -235,6 +245,160 @@ export default function ResumeForm({ formData, setFormData }) {
         ))) : (<></>)}
         <button className="bg-green-500 p-2 rounded-sm text-white cursor-pointer" type="button" onClick={handleAddExperience}>
             Add Experience
+          </button>
+        </div>
+        <div className="flex flex-col gap-4 items-start border-1 border-gray-300 p-4 rounded-sm w-full">
+          <h2 className="text-2xl p-1 text-white text-bold">Projects</h2>
+          {formData.projects.length > 0 ? (Array.from({ length: projectCount }).map((_, index) => (
+            <div key={index} className="project-1 flex flex-col gap-4 items-start border-1 border-gray-200 p-4 rounded-sm w-full">
+              <label className={labelStyle}>
+                Title:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter project title"
+                  onChange={(e) => {
+                    const updatedProjects = [...formData.projects];
+                    updatedProjects[index].title = e.target.value;
+                    setFormData({ ...formData, projects: updatedProjects });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Link:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter project link"
+                  onChange={(e) => {
+                    const updatedProjects = [...formData.projects];
+                    updatedProjects[index].link = e.target.value;
+                    setFormData({ ...formData, projects: updatedProjects });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Technologies:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter project technologies"
+                  onChange={(e) => {
+                    const updatedProjects = [...formData.projects];
+                    updatedProjects[index].technologies = e.target.value;
+                    setFormData({ ...formData, projects: updatedProjects });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Description:
+                <textarea
+                  className={inputBoxEducationStyle}
+                  placeholder="Enter project description"
+                  onChange={(e) => {
+                    const updatedProjects = [...formData.projects];
+                    updatedProjects[index].description = e.target.value;
+                    setFormData({ ...formData, projects: updatedProjects });
+                  }}
+                />
+              </label>
+            </div>
+          ))) : (<></>)}
+          <button className="bg-green-500 p-2 rounded-sm text-white cursor-pointer" type="button" onClick={handleAddProject}>
+            Add Project
+          </button>
+          
+        </div>
+        <div className="flex flex-col gap-4 items-start border-1 border-gray-300 p-4 rounded-sm w-full">
+          <h2 className="text-2xl p-1 text-white text-bold">Skills</h2>
+          <label className={labelStyle}>
+            <input
+              className={inputBoxEducationStyle}
+              type="text"
+              placeholder="Enter your skills"
+              onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(",").map(item => item.trim()) })}
+            />
+          </label>
+        </div>
+        <div className="flex flex-col gap-4 items-start border-1 border-gray-300 p-4 rounded-sm w-full">
+          <h2 className="text-2xl p-1 text-white text-bold">Languages</h2>
+          <label className={labelStyle}>
+            <input
+              className={inputBoxEducationStyle}
+              type="text"
+              placeholder="Enter your languages"
+              onChange={(e) => setFormData({ ...formData, languages: e.target.value.split(",").map(item => item.trim()) })}
+            />
+          </label>
+        </div>
+        <div className="flex flex-col gap-4 items-start border-1 border-gray-300 p-4 rounded-sm w-full">
+          <h2 className="text-2xl p-1 text-white text-bold">Certifications</h2>
+          {formData.certifications.length > 0 ? (Array.from({ length: formData.certifications.length }).map((_, index) => (
+            <div key={index} className="mb-2">
+              <label className={labelStyle}>
+                Title:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter certification title"
+                  onChange={(e) => {
+                    const updatedCertifications = [...formData.certifications];
+                    updatedCertifications[index].title = e.target.value;
+                    setFormData({ ...formData, certifications: updatedCertifications });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Issuer:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter certification issuer"
+                  onChange={(e) => {
+                    const updatedCertifications = [...formData.certifications];
+                    updatedCertifications[index].issuer = e.target.value;
+                    setFormData({ ...formData, certifications: updatedCertifications });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Year:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter certification year"
+                  onChange={(e) => {
+                    const updatedCertifications = [...formData.certifications];
+                    updatedCertifications[index].year = e.target.value;
+                    setFormData({ ...formData, certifications: updatedCertifications });
+                  }}
+                />
+              </label>
+              <label className={labelStyle}>
+                Link:
+                <input
+                  className={inputBoxEducationStyle}
+                  type="text"
+                  placeholder="Enter certification link"
+                  onChange={(e) => {
+                    const updatedCertifications = [...formData.certifications];
+                    updatedCertifications[index].link = e.target.value;
+                    setFormData({ ...formData, certifications: updatedCertifications });
+                  }}
+                />
+              </label>
+            </div>
+          ))) : (<></>)}
+          <button className="bg-green-500 p-2 rounded-sm text-white cursor-pointer" type="button" onClick={() => {
+            const newCertification = {
+              title: "",
+              issuer: "",
+              year: "",
+              link: "",
+            };
+            setFormData({ ...formData, certifications: [...formData.certifications, newCertification] });
+          }}>
+            Add Certification
           </button>
         </div>
       </form>

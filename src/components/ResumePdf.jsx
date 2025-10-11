@@ -126,6 +126,7 @@ export const ResumePDF = ({ formData }) => {
           </View>
 
           {/* Projects */}
+          {formData.projects.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Projects</Text>
             <View style={styles.divider} />
@@ -133,11 +134,11 @@ export const ResumePDF = ({ formData }) => {
               <View key={index} style={styles.item}>
                 <Text style={styles.title}>{project.title}</Text>
                 <Text style={styles.text}>{project.description}</Text>
-                <Text style={styles.technologies}>Technologies: {project.technologies.join(", ")}</Text>
+                <Text style={styles.technologies}>Technologies: {project.technologies}</Text>
                 <Link style={styles.link} src={project.link}>Project Link</Link>
               </View>
             ))}
-          </View>
+          </View>) : (<></>)}
 
           {/* Experience (conditionally rendered) */}
           {hasExperience && (
