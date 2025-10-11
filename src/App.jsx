@@ -69,8 +69,8 @@ const App = () => {
                     textDecoration: 'none',
                     padding: '5px 10px',
                     color: '#fff',
-                    backgroundColor: '#007bff',
-                    borderRadius: '5px'
+                    backgroundColor: '#427243ff',
+                    borderRadius: '5px',
                 }
               }
                 >
