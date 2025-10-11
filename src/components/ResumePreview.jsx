@@ -81,11 +81,7 @@ export default function ResumePreview({ formData}) {
                   <h3 className="font-semibold">{exp.company}</h3>
                   <p>{exp.role}</p>
                   <p>{exp.duration}</p>
-                  <ul>
-                    {exp.responsibilities.map((resp, i) => (
-                      <li key={i}>{resp}</li>
-                    ))}
-                  </ul>
+                  <p>{exp.responsibilities}</p>
                 </div>
               ))}
             </div>

@@ -11,10 +11,9 @@ export let details={
             company: "Tech Solutions",
             role: "Senior Developer",
             duration: "Jan 2020 - Present",
-            responsibilities: [
-                "Lead a team of developers to design and implement web applications.",
-                "Collaborate with cross-functional teams to define project requirements."
-            ],
+            responsibilities: 
+                "Lead a team of developers to design and implement web applications. Collaborate with cross-functional teams to define project requirements."
+            ,
         },
     ],
     education: [

@@ -316,7 +316,7 @@ export default function ResumeForm({ formData, setFormData }) {
               className={inputBoxEducationStyle}
               type="text"
               placeholder="Enter your skills"
-              onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(",").map(item => item.trim()) })}
+              onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
             />
           </label>
         </div>
