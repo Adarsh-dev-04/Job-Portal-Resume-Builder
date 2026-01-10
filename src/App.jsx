@@ -43,7 +43,7 @@ const App = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const res = await fetch("http://localhost:5000/api/resumes", {
+    const res = await fetch(`${API_BASE}/api/resumes`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -56,7 +56,7 @@ const App = () => {
   async function loadSingleResume(resumeId) {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`http://localhost:5000/api/resume/${resumeId}`, {
+    const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -81,7 +81,7 @@ const App = () => {
     const newTitle = prompt("Enter new resume title");
     if (!newTitle) return;
 
-    await fetch(`http://localhost:5000/api/resume/${resumeId}`, {
+    await fetch(`${API_BASE}/api/resume/${resumeId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -101,7 +101,7 @@ const App = () => {
     const ok = window.confirm("Delete this resume permanently?");
     if (!ok) return;
 
-    await fetch(`http://localhost:5000/api/resume/${resumeId}`, {
+    await fetch(`${API_BASE}/api/resume/${resumeId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,

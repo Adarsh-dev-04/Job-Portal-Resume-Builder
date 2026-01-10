@@ -12,7 +12,16 @@ const auth = require("./middleware/auth");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://your-vercel-app.vercel.app",
+    ],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 mongoose
@@ -23,6 +32,8 @@ mongoose
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
+
+const PORT = process.env.PORT || 5000;
 
 /* ================= RESUME ROUTES ================= */
 
@@ -158,6 +169,6 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ token, userId: user._id, name: user.name });
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
