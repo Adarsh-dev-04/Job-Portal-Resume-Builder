@@ -7,8 +7,11 @@ import PDFDownloadButton from "./components/PDFDownloadButton.jsx";
 import Login from "./components/Login.jsx";
 import Signup from "./components/Signup.jsx";
 import { details } from "./Data.js";
+import { API_BASE } from "./config.js";
 
 const App = () => {
+  console.log("API URL:", import.meta.env.VITE_API_URL);
+
   const emptyResume = {
     name: "",
     email: "",
