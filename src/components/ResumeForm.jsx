@@ -1,14 +1,27 @@
 import "../App.css";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
-export default function ResumeForm({ formData, setFormData }) {
+export default function ResumeForm({
+  formData,
+  setFormData,
+  currentResumeId,
+  currentTitle,
+  loadResumeList,
+}) {
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [tempTitle, setTempTitle] = useState("");
+
   const inputBoxStyle =
     "w-full px-4 py-3 bg-white text-black rounded-lg focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50 transition-all duration-200 placeholder-gray-400";
   const textareaStyle =
     "w-full px-4 py-3 bg-white text-black rounded-lg focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 transition-all duration-200 min-h-[100px] resize-vertical placeholder-gray-400";
-  const labelStyle = "text-white flex flex-col gap-2 text-sm sm:text-base lg:text-lg font-medium";
+  const labelStyle =
+    "text-white flex flex-col gap-2 text-sm sm:text-base lg:text-lg font-medium";
   const sectionStyle =
     "flex flex-col gap-4 sm:gap-6 items-start  p-4 sm:p-6 rounded-lg w-full bg-[#F26522]";
-  const buttonStyle = "bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-medium cursor-pointer transition-colors duration-200";
+  const buttonStyle =
+    "bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-medium cursor-pointer transition-colors duration-200";
 
   function handleAddEducation() {
     const newEducation = {
@@ -81,23 +94,92 @@ export default function ResumeForm({ formData, setFormData }) {
     setFormData({ ...formData, certifications: updatedCertifications });
   }
 
+  // async function saveResume() {
+  //   const token = localStorage.getItem("token"); // ✅ DEFINE TOKEN
+
+  //   if (!token) {
+  //     alert("You are not logged in");
+  //     return;
+  //   }
+
+  //   const response = await fetch("http://localhost:5000/api/resume", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`, // ✅ now defined
+  //     },
+  //     body: JSON.stringify({
+  //       resumeId: currentResumeId,
+  //       title: currentTitle,
+  //       data: formData,
+  //     }),
+  //   });
+
+  //   if (!response.ok) {
+  //     const err = await response.json();
+  //     console.error("Save failed:", err);
+  //     alert("Save failed");
+  //     return;
+  //   }
+
+  //   alert("Resume saved successfully");
+  //   await loadResumeList();
+  // }
+
+  async function saveResume() {
+    if (!currentResumeId && !tempTitle) {
+      setShowNameModal(true);
+      return;
+    }
+
+    await actuallySaveResume(tempTitle);
+  }
+
+  async function actuallySaveResume(title) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const res = await fetch("http://localhost:5000/api/resume", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        resumeId: currentResumeId,
+        title,
+        data: formData,
+      }),
+    });
+
+    if (!res.ok) {
+      toast.error("Failed to save resume");
+      return;
+    } else {
+      toast.success("Resume saved successfully");
+    }
+
+    setShowNameModal(false);
+    setTempTitle("");
+    loadResumeList();
+  }
+
   return (
     <div className="w-full">
-
       {/* Tips Section */}
-          {/* <div className="flex content-center justify-center "> */}
-            <div className="mb-2 p-4 bg-gray-300 border border-orange-500 rounded-lg w-full">
-              <h3 className="text-orange-800 font-semibold mb-2 flex items-center gap-2">
-                💡 Tips for a Great Resume
-              </h3>
-              <ul className="text-orange-700 text-sm space-y-1">
-                <li>• Keep descriptions concise and action-oriented</li>
-                <li>• Use keywords relevant to your target job</li>
-                <li>• Quantify achievements with numbers when possible</li>
-                <li>• Preview updates in real-time on the right panel</li>
-              </ul>
-            </div>
-          {/* </div> */}
+      {/* <div className="flex content-center justify-center "> */}
+      <div className="mb-2 p-4 bg-gray-300 border border-orange-500 rounded-lg w-full">
+        <h3 className="text-orange-800 font-semibold mb-2 flex items-center gap-2">
+          💡 Tips for a Great Resume
+        </h3>
+        <ul className="text-orange-700 text-sm space-y-1">
+          <li>• Keep descriptions concise and action-oriented</li>
+          <li>• Use keywords relevant to your target job</li>
+          <li>• Quantify achievements with numbers when possible</li>
+          <li>• Preview updates in real-time on the right panel</li>
+        </ul>
+      </div>
+      {/* </div> */}
 
       <form className="flex flex-col gap-4 sm:gap-6 items-start">
         {/* Personal Information */}
@@ -187,8 +269,11 @@ export default function ResumeForm({ formData, setFormData }) {
         {/* Education */}
         <div className={sectionStyle}>
           <h2 className="text-2xl text-white font-bold mb-2">Education</h2>
-          {formData.education.map((edu, index) => (
-            <div key={index} className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative">
+          {formData.education?.map((edu, index) => (
+            <div
+              key={index}
+              className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative"
+            >
               <button
                 type="button"
                 onClick={() => handleRemoveEducation(index)}
@@ -276,7 +361,10 @@ export default function ResumeForm({ formData, setFormData }) {
         <div className={sectionStyle}>
           <h2 className="text-2xl text-white font-bold mb-2">Experience</h2>
           {formData.experience.map((exp, index) => (
-            <div key={index} className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative">
+            <div
+              key={index}
+              className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative"
+            >
               <button
                 type="button"
                 onClick={() => handleRemoveExperience(index)}
@@ -378,7 +466,10 @@ export default function ResumeForm({ formData, setFormData }) {
         <div className={sectionStyle}>
           <h2 className="text-2xl text-white font-bold mb-2">Projects</h2>
           {formData.projects.map((project, index) => (
-            <div key={index} className="flex flex-col gap-4 items-start  p-4 rounded-lg w-full bg-orange-400 relative">
+            <div
+              key={index}
+              className="flex flex-col gap-4 items-start  p-4 rounded-lg w-full bg-orange-400 relative"
+            >
               <button
                 type="button"
                 onClick={() => handleRemoveProject(index)}
@@ -503,7 +594,10 @@ export default function ResumeForm({ formData, setFormData }) {
         <div className={sectionStyle}>
           <h2 className="text-2xl text-white font-bold mb-2">Certifications</h2>
           {formData.certifications.map((cert, index) => (
-            <div key={index} className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative">
+            <div
+              key={index}
+              className="flex flex-col gap-4 items-start p-4 rounded-lg w-full bg-orange-400 relative"
+            >
               <button
                 type="button"
                 onClick={() => handleRemoveCertification(index)}
@@ -603,7 +697,45 @@ export default function ResumeForm({ formData, setFormData }) {
             Add Certification
           </button>
         </div>
+        <button
+          type="button"
+          onClick={saveResume}
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-semibold"
+        >
+          Save Resume
+        </button>
       </form>
+      {showNameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+            <h3 className="text-lg font-bold mb-4">Name your resume</h3>
+
+            <input
+              type="text"
+              placeholder="e.g. Software Engineer Resume"
+              value={tempTitle}
+              onChange={(e) => setTempTitle(e.target.value)}
+              className="w-full border px-3 py-2 rounded mb-4"
+              autoFocus
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowNameModal(false)}
+                className="px-3 py-1 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => actuallySaveResume(tempTitle)}
+                className="px-3 py-1 bg-green-600 text-white rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
