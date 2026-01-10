@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE } from "../config.js";
 
 export default function Signup({ onSignup }) {
   const [name, setName] = useState("");

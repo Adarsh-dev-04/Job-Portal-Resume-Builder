@@ -1,6 +1,7 @@
 import "../App.css";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { API_BASE } from "../config.js";
 
 export default function ResumeForm({
   formData,
