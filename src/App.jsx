@@ -31,6 +31,7 @@ const App = () => {
   const [userName, setUserName] = useState(localStorage.getItem("name") || "");
   const [resumeList, setResumeList] = useState([]);
   const [formData, setFormData] = useState(emptyResume);
+  
 
   const [currentResumeId, setCurrentResumeId] = useState(null);
   const [currentTitle, setCurrentTitle] = useState("");
@@ -151,26 +152,19 @@ const App = () => {
       <div>
         {showSignup ? (
           <>
-            <Signup onSignup={() => setShowSignup(false)} />
-            <p>
-              Already have an account?{" "}
-              <button onClick={() => setShowSignup(false)}>Login</button>
-            </p>
+            <Signup onSwitchToLogin={()=>setShowSignup(false)} onSignup={() => setShowSignup(false)} />
           </>
         ) : (
           <>
             <Login
               setUserName={setUserName}
+              onSwitchToSignup={() => setShowSignup(true)}
               onLogin={() => {
                 setIsLoggedIn(true);
                 loadResumeList();
                 loadSingleResume(resumeList[0]?._id);
               }}
             />
-            <p>
-              New user?{" "}
-              <button onClick={() => setShowSignup(true)}>Sign Up</button>
-            </p>
           </>
         )}
       </div>
