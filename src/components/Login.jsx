@@ -6,36 +6,34 @@ export default function Login({ onLogin, setUserName }) {
   const [error, setError] = useState("");
 
   async function handleLogin(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await res.json();
 
-      if (!response.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
-
-      // ✅ PART 5: SAVE USER INFO
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("name", data.name);
-      setUserName(data.name);
-      // tell parent that login is successful
-      onLogin();
-    } catch (err) {
-      setError("Something went wrong");
+    if (!res.ok) {
+      alert(data.message || "Login failed");
+      return;
     }
-  }
 
+    // ✅ SUCCESS
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.userId);
+
+    onLogin();
+  } catch (err) {
+    console.error(err);
+    alert("Backend not reachable. Please try again.");
+  }
+}
   return (
     <form onSubmit={handleLogin}>
       <h2>Login</h2>
