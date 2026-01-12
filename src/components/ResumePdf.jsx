@@ -1,5 +1,4 @@
 import React from "react";
-import "../App.css";
 import {
   Page,
   Text,
@@ -7,210 +6,264 @@ import {
   Document,
   StyleSheet,
   Link,
-  Font,
 } from "@react-pdf/renderer";
 
-// --- Stylesheet ---
-// All Tailwind CSS classes have been converted to this StyleSheet object.
-// This is the standard way to apply styles in @react-pdf/renderer.
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
+    paddingTop: 36,
+    paddingBottom: 36,
+    paddingHorizontal: 40,
     fontFamily: "Helvetica",
+    fontSize: 10,
+    color: "#111827",
   },
-  container: {
-    display: "flex",
-    height: "100%",
-    padding: 10,
-    flexDirection: "column",
-    gap: 10,
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#000000",
-  },
+
+  /* HEADER */
   header: {
-    textAlign: "center",
-    marginBottom: 10,
+    alignItems: "center",
+    marginBottom: 18,
   },
   name: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  contactInfo: {
-    display: "flex",
+  contactRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
-    gap: 8,
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: "#333333",
+    fontSize: 9.5,
+    color: "#374151",
   },
-  link: {
-    fontSize: 10,
-    color: "black",
-    textDecoration: "underline",
-    underlineOffset: 2,
+  contactItem: {
+    marginHorizontal: 4,
   },
-  section: {
-    paddingHorizontal: 8,
-    marginBottom: 5,
+  address: {
+    fontSize: 9,
+    color: "#6b7280",
+    marginTop: 4,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
-  },
+
+  /* DIVIDER */
   divider: {
     borderBottomWidth: 1,
-    borderBottomColor: "#cccccc",
-    marginBottom: 8,
+    borderBottomColor: "#d1d5db",
+    marginTop: 6,
+    marginBottom: 14,
   },
-  item: {
-    marginBottom: 8,
+
+  /* SECTIONS */
+  section: {
+    marginBottom: 20,
   },
-  itemHeader: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    fontSize: 11,
-  },
-  itemSubHeader: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    fontSize: 10,
-  },
-  title: {
+  sectionTitle: {
+    fontSize: 13,
     fontFamily: "Helvetica-Bold",
-    fontSize: 11,
+    marginBottom: 6,
+  },
+
+  /* ENTRIES */
+  entry: {
+    marginBottom: 12,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  titleBold: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10.5,
   },
   text: {
-    fontSize: 12,
+    fontSize: 10,
+    lineHeight: 1.4,
+  },
+  meta: {
+    fontSize: 9.5,
+    color: "#4b5563",
+  },
+  description: {
+    fontSize: 10,
+    marginTop: 4,
+    lineHeight: 1.4,
   },
   technologies: {
-    fontStyle: "italic",
     fontSize: 9,
-    color: "#555555",
+    fontStyle: "italic",
+    color: "#6b7280",
+    marginTop: 3,
   },
-  listItem: {
+  link: {
+    fontSize: 9,
+    color: "#2563eb",
+    textDecoration: "underline",
+    marginTop: 3,
+  },
+
+  /* BULLETS */
+  bullet: {
     fontSize: 10,
-    marginLeft: 10, // Indent list items
+    marginLeft: 10,
+    marginTop: 4,
+    lineHeight: 1.4,
   },
 });
 
-// --- The PDF Document Component ---
+
 export const ResumePDF = ({ formData }) => {
-  // Correctly check if experience data exists without causing re-renders
-  const hasExperience = formData.experience && formData.experience.length > 0;
+  // ✅ Normalize data safely
+  const experienceList = formData.experience || [];
+  const educationList = formData.education || [];
+  const projectList = formData.projects || [];
+  const certificationList = formData.certifications || [];
+
+  const languagesText =
+    typeof formData.languages === "string"
+      ? formData.languages
+      : Array.isArray(formData.languages)
+      ? formData.languages.join(", ")
+      : "";
 
   return (
-    <Document style={styles.border}>
+    <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.name}>{formData.name}</Text>
-            <View style={styles.contactInfo}>
-              <Link style={styles.link} src={`mailto:${formData.email}`}>
-                {formData.email}
-              </Link>
-              <Text>|</Text>
-              <Link style={styles.link} src={`tel:${formData.phone}`}>
-                {formData.phone}
-              </Link>
-              <Text>|</Text>
-              <Link style={styles.link} src={formData.linkedIn}>
+
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Text style={styles.name}>{formData.name}</Text>
+
+          <View style={styles.contactRow}>
+            <Text style={styles.contactItem}>{formData.email}</Text>
+            <Text>|</Text>
+            <Text style={styles.contactItem}>{formData.phone}</Text>
+            <Text>|</Text>
+            {formData.linkedIn && (
+              <Link src={formData.linkedIn} style={styles.contactItem}>
                 LinkedIn
               </Link>
-              <Text>|</Text>
-              <Link style={styles.link} src={formData.github}>
+            )}
+            <Text>|</Text>
+            {formData.github && (
+              <Link src={formData.github} style={styles.contactItem}>
                 GitHub
               </Link>
-            </View>
+            )}
           </View>
 
-          {/* Education */}
+          {formData.address && (
+            <Text style={styles.address}>{formData.address}</Text>
+          )}
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* EDUCATION */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Education</Text>
+          <View style={styles.divider} />
+          {educationList.map((edu, i) => (
+            <View key={i} style={styles.entry}>
+              <View style={styles.rowBetween}>
+                <Text style={styles.titleBold}>{edu.institution}</Text>
+                <Text style={styles.meta}>{edu.year}</Text>
+              </View>
+              <View style={styles.rowBetween}>
+                <Text style={styles.text}>{edu.degree}</Text>
+                {edu.cgpa && <Text style={styles.meta}>CGPA: {edu.cgpa}</Text>}
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* PROJECTS */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Projects</Text>
+          <View style={styles.divider} />
+          {projectList.map((project, i) => (
+            <View key={i} style={styles.entry}>
+              <Text style={styles.titleBold}>{project.title}</Text>
+              <Text style={styles.description}>{project.description}</Text>
+              {project.technologies && (
+                <Text style={styles.technologies}>
+                  Technologies: {project.technologies}
+                </Text>
+              )}
+              {project.link && (
+                <Link src={project.link} style={styles.link}>
+                  Project Link
+                </Link>
+              )}
+            </View>
+          ))}
+        </View>
+
+        {/* EXPERIENCE */}
+        
+        {experienceList.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Education</Text>
+            <Text style={styles.sectionTitle}>Experience</Text>
             <View style={styles.divider} />
-            {formData.education.map((edu, index) => (
-              <View key={index} style={styles.item}>
-                <View style={styles.itemHeader}>
-                  <Text style={styles.title}>{edu.institution}</Text>
-                  <Text style={styles.text}>{edu.year}</Text>
+            {experienceList.map((exp, i) => (
+              <View key={i} style={styles.entry}>
+                <View style={styles.rowBetween}>
+                  <Text style={styles.titleBold}>{exp.company}</Text>
+                  <Text style={styles.meta}>{exp.duration}</Text>
                 </View>
-                <View style={styles.itemSubHeader}>
-                  <Text style={styles.text}>{edu.degree}</Text>
-                  <Text style={styles.text}>CGPA: {edu.cgpa}</Text>
-                </View>
+                <Text style={styles.text}>{exp.role}</Text>
+
+                {/* ✅ Handle string responsibilities */}
+                {exp.responsibilities && (
+                  <Text style={styles.bullet}>
+                    • {exp.responsibilities}
+                  </Text>
+                )}
               </View>
             ))}
           </View>
+        )}
 
-          {/* Projects */}
-          {formData.projects.length > 0 ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Projects</Text>
-              <View style={styles.divider} />
-              {formData.projects.map((project, index) => (
-                <View key={index} style={styles.item}>
-                  <Text style={styles.title}>{project.title}</Text>
-                  <Text style={styles.text}>{project.description}</Text>
-                  <Text style={styles.technologies}>
-                    Technologies: {project.technologies}
-                  </Text>
-                  <Link style={styles.link} src={project.link}>
-                    Project Link
-                  </Link>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <></>
-          )}
+        {/* SKILLS */}
+        {(formData.skills || languagesText) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Skills</Text>
+            <View style={styles.divider} />
+            {formData.skills && (
+              <Text style={styles.text}>
+                <Text style={styles.titleBold}>Technical Skills: </Text>
+                {formData.skills}
+              </Text>
+            )}
 
-          {/* Experience (conditionally rendered) */}
-          {hasExperience && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Experience</Text>
-              <View style={styles.divider} />
-              {formData.experience.map((exp, index) => (
-                <View key={index} style={styles.item}>
-                  <Text style={styles.title}>{exp.company}</Text>
-                  <Text style={styles.text}>{exp.role}</Text>
-                  <Text style={styles.text}>{exp.duration}</Text>
-                  <Text style={styles.text}>{exp.responsibilities}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-          {/* Skills */}
-          {formData.skills && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Skills</Text>
-              <View style={styles.divider} />
-              <Text style={styles.text}>{formData.skills}</Text>
-            </View>
-          )}
-          {/* Certifications */}
-          {formData.certifications && formData.certifications.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Certifications</Text>
-              <View style={styles.divider} />
-              {formData.certifications.map((cert, index) => (
-                <View key={index} style={styles.item}>
-                  <Text style={styles.title}>{cert.title}</Text>
-                  <Text style={styles.text}>{cert.issuer}</Text>
-                  <Text style={styles.text}>{cert.year}</Text>
-                  <Link style={styles.link} src={cert.link}>
+            {languagesText && (
+              <Text style={[styles.text, { marginTop: 4 }]}>
+                <Text style={styles.titleBold}>Languages: </Text>
+                {languagesText}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* CERTIFICATIONS */}
+        {certificationList.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Certifications</Text>
+            <View style={styles.divider} />
+            {certificationList.map((cert, i) => (
+              <View key={i} style={styles.entry}>
+                <Text style={styles.titleBold}>{cert.title}</Text>
+                <Text style={styles.text}>
+                  {cert.issuer} {cert.year && `(${cert.year})`}
+                </Text>
+                {cert.link && (
+                  <Link src={cert.link} style={styles.link}>
                     Certification Link
                   </Link>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
       </Page>
     </Document>
   );
