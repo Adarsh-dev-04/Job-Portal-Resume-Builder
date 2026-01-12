@@ -344,6 +344,7 @@ const App = () => {
             setShowLoginModal(false);
             setShowSignup(true);
           }}
+          onClose={() => setShowLoginModal(false)}
           setShowLoginModal={setShowLoginModal}
         />
       )}

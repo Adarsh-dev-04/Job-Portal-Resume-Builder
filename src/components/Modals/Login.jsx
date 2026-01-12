@@ -2,7 +2,7 @@ import { useState } from "react";
 import { API_BASE } from "../../config";
 import toast from "react-hot-toast";
 
-export default function Login({ onLogin, onSwitchToSignup , setShowLoginModal}) {
+export default function Login({ onLogin, onSwitchToSignup , onClose}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,8 +45,8 @@ export default function Login({ onLogin, onSwitchToSignup , setShowLoginModal}) 
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center" onClick={()=> setShowLoginModal(false)}>
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
 
         <form onSubmit={handleLogin}>

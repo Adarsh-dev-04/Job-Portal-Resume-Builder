@@ -1,7 +1,7 @@
 export default function UserInfoModal({ setShowUserInfoModal, deleteAccount, setShowUpdateInfoModal, userName, userEmail, isLoggedIn}) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center" onClick={()=> setShowUserInfoModal(false)}>
-      <div className="relative bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onClick={(e)=>e.stopPropagation()}>
         <h2 className="text-2xl font-bold mb-4 text-center">
           User Information
         </h2>
