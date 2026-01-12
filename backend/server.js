@@ -24,8 +24,6 @@ app.use(
   })
 );
 
-// IMPORTANT: allow preflight
-app.options("*", cors());
 
 app.use(express.json());
 
