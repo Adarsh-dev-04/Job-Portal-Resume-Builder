@@ -42,6 +42,8 @@ const App = () => {
   const [currentResumeId, setCurrentResumeId] = useState(null);
   const [currentTitle, setCurrentTitle] = useState("");
   const [deleteResumeId, setDeleteResumeId] = useState(null);
+  const [renameResumeId, setRenameResumeId] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
@@ -244,17 +246,15 @@ const App = () => {
                                 key={resume._id}
                                 className="px-4 py-2 border-b hover:bg-gray-100"
                               >
-                                {showRenameInput ? (
+                                {renameResumeId === resume._id ? (
                                   <input
                                     type="text"
-                                    defaultValue={
-                                      resume.title || "Untitled Resume"
+                                    value={renameValue}
+                                    onChange={(e) =>
+                                      setRenameValue(e.target.value)
                                     }
-                                    onBlur={(e) => {
-                                      renameResume(resume._id, e.target.value);
-                                      setShowRenameInput(false);
-                                    }}
                                     className="w-full border px-2 py-1 rounded"
+                                    autoFocus
                                   />
                                 ) : (
                                   <button
@@ -262,27 +262,44 @@ const App = () => {
                                       loadSingleResume(resume._id);
                                       setIsDropdownOpen(false);
                                     }}
-                                    className="block w-full text-left font-medium"
+                                    className="block w-full text-left font-medium cursor-pointer hover:text-gray-500"
                                   >
                                     {resume.title || "Untitled Resume"}
                                   </button>
                                 )}
 
                                 <div className="flex gap-3 text-sm mt-1">
-                                  <button
-                                    onClick={() =>
-                                      setShowRenameInput((prev) => !prev)
-                                    }
-                                    className="text-blue-600"
-                                  >
-                                    {showRenameInput ? "Save" : "Rename"}
-                                  </button>
+                                  {renameResumeId === resume._id ? (
+                                    <button
+                                      className="text-green-600 cursor-pointer"
+                                      onClick={() => {
+                                        renameResume(resume._id, renameValue);
+                                        setRenameResumeId(null);
+                                        setRenameValue("");
+                                      }}
+                                    >
+                                      Save
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="text-blue-500 cursor-pointer"
+                                      onClick={() => {
+                                        setRenameResumeId(resume._id);
+                                        setRenameValue(
+                                          resume.title || "Untitled Resume"
+                                        );
+                                      }}
+                                    >
+                                      Rename
+                                    </button>
+                                  )}
+
                                   <button
                                     onClick={() => {
                                       setDeleteResumeId(resume._id);
                                       setShowDeleteConfirmationModal(true);
                                     }}
-                                    className="text-red-600"
+                                    className="text-red-600 cursor-pointer"
                                   >
                                     Delete
                                   </button>
@@ -307,7 +324,6 @@ const App = () => {
             </div>
           </div>
         </header>
-
 
         <main className="py-6">
           <div className="mx-2 flex flex-col xl:flex-row gap-6">
