@@ -1,4 +1,5 @@
-export default function UserInfoModal({ setShowUserInfoModal, deleteAccount, setShowUpdateInfoModal, userName, userEmail, isLoggedIn}) {
+
+export default function UserInfoModal({ setShowUserInfoModal, onDeleteAccount, setShowUpdateInfoModal, userName, userEmail, isLoggedIn}) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center" onClick={()=> setShowUserInfoModal(false)}>
       <div className="relative bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onClick={(e)=>e.stopPropagation()}>
@@ -44,8 +45,9 @@ export default function UserInfoModal({ setShowUserInfoModal, deleteAccount, set
         </button>
         <div className="flex gap-2">
           <button
-            className="mt-4 w-full bg-red-600 text-white py-2 cursor-pointer hover:bg-red-700 rounded-lg"
-            onClick={() => deleteAccount()}
+            className="mt-4 w-full bg-red-600 text-white py-2 enabled:cursor-pointer enabled:hover:bg-red-700 rounded-lg disabled:opacity-50"
+            disabled={!isLoggedIn}
+            onClick={onDeleteAccount}
           >
             Delete Account
           </button>

@@ -10,6 +10,7 @@ import { details } from "./Data.js";
 import { API_BASE } from "./config.js";
 import toast from "react-hot-toast";
 import UserInfoModal from "./components/Modals/UserInfoModal.jsx";
+import DeleteConfirmationModal from "./components/Modals/DeleteConfirmationModal.jsx";
 
 const App = () => {
   const emptyResume = {
@@ -40,10 +41,13 @@ const App = () => {
 
   const [currentResumeId, setCurrentResumeId] = useState(null);
   const [currentTitle, setCurrentTitle] = useState("");
+  const [deleteResumeId, setDeleteResumeId] = useState(null);
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
   const [showUpdateInfoModal, setShowUpdateInfoModal] = useState(false);
+  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] =
+    useState(false);
 
   const [showRenameInput, setShowRenameInput] = useState(false);
 
@@ -110,9 +114,6 @@ const App = () => {
     loadResumeList();
   }
   async function deleteAccount() {
-    const ok = window.confirm("Delete your account permanently?");
-    if (!ok) return;
-
     await fetch(`${API_BASE}/api/deleteAccount`, {
       method: "DELETE",
       headers: {
@@ -128,9 +129,7 @@ const App = () => {
   }
 
   async function deleteResume(resumeId) {
-    const ok = window.confirm("Delete this resume permanently?");
-    if (!ok) return;
-
+    console.log("Delete Func");
     await fetch(`${API_BASE}/api/resume/${resumeId}`, {
       method: "DELETE",
       headers: {
@@ -144,15 +143,12 @@ const App = () => {
       setCurrentTitle("");
       localStorage.removeItem("activeResumeId");
     }
-
+    setDeleteResumeId(null);
     loadResumeList();
+    toast.success("Resume Deleted");
+    setShowDeleteConfirmationModal(false);
   }
 
-  // useEffect(() => {
-  //   if (isLoggedIn) {
-  //     loadResumeList();
-  //   }
-  // }, [isLoggedIn]);
   useEffect(() => {
     if (isLoggedIn) {
       loadResumeList();
@@ -196,7 +192,7 @@ const App = () => {
                       setCurrentResumeId(null);
                       setCurrentTitle("");
                     }}
-                    className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200"
+                    className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
                   >
                     + New Resume
                   </button>
@@ -206,7 +202,7 @@ const App = () => {
                   {!isLoggedIn ? (
                     <button
                       onClick={() => setShowLoginModal(true)}
-                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200"
+                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
                     >
                       Login to Save
                     </button>
@@ -218,7 +214,7 @@ const App = () => {
                         localStorage.removeItem("name");
                         window.location.reload();
                       }}
-                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200"
+                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
                     >
                       Logout
                     </button>
@@ -230,62 +226,71 @@ const App = () => {
                     {/* Dropdown button */}
                     <button
                       onClick={() => setIsDropdownOpen((prev) => !prev)}
-                      className="inline-block px-4 py-2 border-2 hover:text-white border-white bg-white hover:bg-orange-500/50 active:text-gray-800 hover:cursor-pointer text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                      className="inline-block px-4 py-2 border-2 hover:text-white border-white bg-white hover:bg-orange-500/50 active:scale-98 hover:cursor-pointer text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base"
                     >
                       My Resumes ▾
                     </button>
                     {/* Dropdown Menu */}
                     {isDropdownOpen && (
                       <div className="absolute right-20 top-15 w-64 bg-white shadow-xl rounded z-50 border">
-                        <div className="max-h-64 overflow-y-auto">
-                          {resumeList.map((resume) => (
-                            <div
-                              key={resume._id}
-                              className="px-4 py-2 border-b hover:bg-gray-100"
-                            >
-                              {showRenameInput ? (
-                                <input
-                                  type="text"
-                                  defaultValue={
-                                    resume.title || "Untitled Resume"
-                                  }
-                                  onBlur={(e) => {
-                                    renameResume(resume._id, e.target.value);
-                                    setShowRenameInput(false);
-                                  }}
-                                  className="w-full border px-2 py-1 rounded"
-                                />
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    loadSingleResume(resume._id);
-                                    setIsDropdownOpen(false);
-                                  }}
-                                  className="block w-full text-left font-medium"
-                                >
-                                  {resume.title || "Untitled Resume"}
-                                </button>
-                              )}
+                        {resumeList.length == 0 ? (
+                          <div className="px-4 py-2 text-blue-600 border-b hover:bg-gray-100">
+                            No Resume Saved
+                          </div>
+                        ) : (
+                          <div className="max-h-64 overflow-y-auto">
+                            {resumeList.map((resume) => (
+                              <div
+                                key={resume._id}
+                                className="px-4 py-2 border-b hover:bg-gray-100"
+                              >
+                                {showRenameInput ? (
+                                  <input
+                                    type="text"
+                                    defaultValue={
+                                      resume.title || "Untitled Resume"
+                                    }
+                                    onBlur={(e) => {
+                                      renameResume(resume._id, e.target.value);
+                                      setShowRenameInput(false);
+                                    }}
+                                    className="w-full border px-2 py-1 rounded"
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      loadSingleResume(resume._id);
+                                      setIsDropdownOpen(false);
+                                    }}
+                                    className="block w-full text-left font-medium"
+                                  >
+                                    {resume.title || "Untitled Resume"}
+                                  </button>
+                                )}
 
-                              <div className="flex gap-3 text-sm mt-1">
-                                <button
-                                  onClick={() =>
-                                    setShowRenameInput((prev) => !prev)
-                                  }
-                                  className="text-blue-600"
-                                >
-                                  {showRenameInput ? "Save" : "Rename"}
-                                </button>
-                                <button
-                                  onClick={() => deleteResume(resume._id)}
-                                  className="text-red-600"
-                                >
-                                  Delete
-                                </button>
+                                <div className="flex gap-3 text-sm mt-1">
+                                  <button
+                                    onClick={() =>
+                                      setShowRenameInput((prev) => !prev)
+                                    }
+                                    className="text-blue-600"
+                                  >
+                                    {showRenameInput ? "Save" : "Rename"}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setDeleteResumeId(resume._id);
+                                      setShowDeleteConfirmationModal(true);
+                                    }}
+                                    className="text-red-600"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -303,11 +308,12 @@ const App = () => {
           </div>
         </header>
 
+
         <main className="py-6">
           <div className="mx-2 flex flex-col xl:flex-row gap-6">
             <div className="w-full xl:w-1/2">
               <div className="bg-[#FFF9F5] rounded-xl shadow-2xl p-2">
-                <div className="p-4 sm:p-6 lg:p-8 max-h-[80vh] overflow-y-auto">
+                <div className="relative p-4 sm:p-6 lg:p-8 max-h-[80vh] overflow-y-auto">
                   <ResumeForm
                     formData={formData}
                     setFormData={setFormData}
@@ -370,6 +376,28 @@ const App = () => {
           userName={userName}
           userEmail={userEmail}
           isLoggedIn={isLoggedIn}
+          onDeleteAccount={() => setShowDeleteConfirmationModal(true)}
+        />
+      )}
+      {showDeleteConfirmationModal && (
+        <DeleteConfirmationModal
+          setShowDeleteConfirmationModal={setShowDeleteConfirmationModal}
+          setDeleteResumeId={null}
+          message="Do you want to delete your account permanently?"
+          onDelete={() => {
+            deleteAccount();
+          }}
+        />
+      )}
+      {showDeleteConfirmationModal && deleteResumeId !== null && (
+        <DeleteConfirmationModal
+          setShowDeleteConfirmationModal={setShowDeleteConfirmationModal}
+          setDeleteResumeId={setDeleteResumeId}
+          message="Do you want to delete this resume permanently?"
+          onDelete={() => {
+            console.log(deleteResumeId);
+            deleteResume(deleteResumeId);
+          }}
         />
       )}
     </div>

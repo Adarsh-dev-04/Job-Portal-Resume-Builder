@@ -184,10 +184,11 @@ export default function ResumeForm({
 
   return (
     <div className="w-full">
-      <p>File Name : {currentTitle || "Untitled"}</p>
       {/* Tips Section */}
       {/* <div className="flex content-center justify-center "> */}
       <div className="mb-2 p-4 bg-gray-300 border border-orange-500 rounded-lg w-full">
+        <h1 className="text-gray-500 border-bottom-2 font-bold mb-2 text-xl">Resume Title : <strong className="ml-2 text-right text-orange-800">{currentTitle || "Untitled"}</strong></h1>
+        <hr className="mb-2 bg-orange-500" />
         <h3 className="text-orange-800 font-semibold mb-2 flex items-center gap-2">
           💡 Tips for a Great Resume
         </h3>
@@ -723,7 +724,7 @@ export default function ResumeForm({
           onClick={() => {
             saveResume();
           }}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-semibold"
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-semibold cursor-pointer"
         >
           Save Resume
         </button>
@@ -732,7 +733,7 @@ export default function ResumeForm({
           onClick={() => {
             clearformData();
           }}
-          className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-semibold"
+          className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-semibold cursor-pointer"
         >
           Clear Form
         </button>
@@ -755,13 +756,13 @@ export default function ResumeForm({
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowNameModal(false)}
-                className="px-3 py-1 bg-gray-300 rounded"
+                className="px-3 py-1 bg-gray-300 rounded cursor-pointer hover:bg-gray-400"
               >
                 Cancel
               </button>
               <button
                 onClick={() => actuallySaveResume(tempTitle)}
-                className="px-3 py-1 bg-green-600 text-white rounded"
+                className="px-3 py-1 bg-green-600 text-white rounded cursor-pointer hover:bg-green-700"
               >
                 Save
               </button>

@@ -47,7 +47,7 @@ export default function Signup({ onSignup, onSwitchToLogin, setShowSignup }) {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:ring-2 focus:ring-orange-400"
+            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
           <input
@@ -56,7 +56,7 @@ export default function Signup({ onSignup, onSwitchToLogin, setShowSignup }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:ring-2 focus:ring-orange-400"
+            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
           <input
@@ -65,7 +65,7 @@ export default function Signup({ onSignup, onSwitchToLogin, setShowSignup }) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:ring-2 focus:ring-orange-400"
+            className="w-full mb-4 px-4 py-2 bg-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
           <button

@@ -22,11 +22,9 @@ export default function PDFDownloadButton({ formData }) {
         <PDFDownloadLink
             document={<ResumePDF formData={formData} />}
             fileName={`${formData.name || "resume"}_resume.pdf`}
-            className="inline-block px-4 py-2 border-2 hover:text-white border-white bg-white hover:bg-orange-500/50 hover:cursor-pointer text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base"
+            className="inline-block px-4 py-2 border-2 hover:text-white border-white bg-white hover:bg-orange-500/50 hover:cursor-pointer text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base active:scale-98"
         >
-            {({ loading }) =>
-                loading ? "Generating PDF..." : "Download PDF"
-            }
+            Download PDF
         </PDFDownloadLink>
     );
 }
