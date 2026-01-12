@@ -9,6 +9,7 @@ export default function ResumeForm({
   currentResumeId,
   currentTitle,
   loadResumeList,
+  clearformData,
 }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [tempTitle, setTempTitle] = useState("");
@@ -128,17 +129,33 @@ export default function ResumeForm({
   // }
 
   async function saveResume() {
+    console.log("saveResume called");
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setShowLoginModal(true); // 👈 force login
+      return;
+    }
+
     if (!currentResumeId && !tempTitle) {
       setShowNameModal(true);
       return;
     }
 
-    await actuallySaveResume(tempTitle);
+    const titleToSave = currentResumeId ? currentTitle : tempTitle;
+
+    await actuallySaveResume(titleToSave);
+
+    // continue with save logic
   }
 
   async function actuallySaveResume(title) {
     const token = localStorage.getItem("token");
-    if (!token) return;
+
+    if (!token) {
+      alert("You are not logged in");
+      return;
+    }
 
     const res = await fetch(`${API_BASE}/api/resume`, {
       method: "POST",
@@ -167,6 +184,7 @@ export default function ResumeForm({
 
   return (
     <div className="w-full">
+      <p>File Name : {currentTitle || "Untitled"}</p>
       {/* Tips Section */}
       {/* <div className="flex content-center justify-center "> */}
       <div className="mb-2 p-4 bg-gray-300 border border-orange-500 rounded-lg w-full">
@@ -698,17 +716,31 @@ export default function ResumeForm({
             Add Certification
           </button>
         </div>
+        <div className="flex gap-4">
+
         <button
           type="button"
-          onClick={saveResume}
+          onClick={() => {
+            saveResume();
+          }}
           className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-semibold"
         >
           Save Resume
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            clearformData();
+          }}
+          className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-semibold"
+        >
+          Clear Form
+        </button>
+        </div>
       </form>
       {showNameModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center">
+          <div className="relative bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-bold mb-4">Name your resume</h3>
 
             <input

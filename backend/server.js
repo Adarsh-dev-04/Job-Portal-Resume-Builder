@@ -128,6 +128,22 @@ app.delete("/api/resume/:id", auth, async (req, res) => {
   }
 });
 
+// DELETE ACCOUNT and all resumes of logged-in user
+app.delete("/api/deleteAccount", auth, async (req, res) => {
+  try {
+    const userId = req.userId; // ✅ from JWT
+
+    await Resume.deleteMany({ userId });
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: "Account and all resumes deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Delete failed" });
+  }
+});
+
+
 /* ================= AUTH ROUTES ================= */
 
 app.post("/api/auth/register", async (req, res) => {
@@ -158,7 +174,7 @@ app.post("/api/auth/login", async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
-  const name = User.name;
+  const name = user.name;
 
   const token = jwt.sign(
   { userId: user._id },
