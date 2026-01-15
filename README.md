@@ -1,16 +1,71 @@
-# React + Vite
+# 📝 Resume Builder – Full Stack Web Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern **Resume Builder web application** that allows users to create, preview, download, and manage professional resumes with optional authentication for persistent storage.
 
-Currently, two official plugins are available:
+🔗 **Live Demo:** https://resume-builder-lilac-two.vercel.app  
+🔗 **Backend API:** https://resume-builder-backend-pgzy.onrender.com  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Features
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 👤 Guest Mode
+- Build resume without login
+- Live preview while typing
+- Download resume as **ATS-friendly PDF**
+- Warning before refresh if changes are unsaved
 
-## Expanding the ESLint configuration
+### 🔐 Authenticated Users
+- Secure login & signup using **JWT authentication**
+- Save resumes persistently to database
+- Create **multiple resumes per user**
+- Rename & delete resumes
+- Resume list accessible via header dropdown
+- Resume auto-load on refresh
+- Account management (delete account & data)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 📄 Resume Sections
+- Personal Information
+- Education
+- Experience
+- Projects
+- Skills
+- Languages
+- Certifications
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **React (Vite)**
+- Tailwind CSS
+- React Hooks
+- React Icons
+- @react-pdf/renderer (PDF generation)
+
+### Backend
+- **Node.js**
+- **Express.js**
+- MongoDB + Mongoose
+- JWT Authentication
+- bcrypt (password hashing)
+- CORS enabled API
+
+### Deployment
+- Frontend: **Vercel**
+- Backend: **Render**
+- Database: **MongoDB Atlas**
+
+---
+
+## 🧠 Architecture Overview
+
+Frontend (React)
+│
+│ REST API (JWT Protected)
+▼
+Backend (Express + Node)
+│
+▼
+MongoDB Atlas
