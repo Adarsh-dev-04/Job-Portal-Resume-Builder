@@ -9,6 +9,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const userRoutes = require("./routes/userRoutes");
+const userController = require("./controllers/userController");
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/users", userRoutes);
+app.get("/api/companies/:employerId", userController.getCompany);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
