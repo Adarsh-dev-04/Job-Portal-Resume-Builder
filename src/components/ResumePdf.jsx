@@ -10,18 +10,17 @@ import {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 36,
-    paddingBottom: 36,
-    paddingHorizontal: 40,
+    paddingTop: 32,
+    paddingBottom: 32,
+    paddingHorizontal: 36,
     fontFamily: "Helvetica",
     fontSize: 10,
     color: "#111827",
   },
 
-  /* HEADER */
   header: {
     alignItems: "center",
-    marginBottom: 18,
+    marginBottom: 16,
   },
   name: {
     fontSize: 24,
@@ -44,31 +43,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* DIVIDER */
   divider: {
     borderBottomWidth: 1,
     borderBottomColor: "#d1d5db",
-    marginTop: 6,
-    marginBottom: 14,
+    marginTop: 4,
+    marginBottom: 12,
   },
 
-  /* SECTIONS */
   section: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 13,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 6,
+    marginBottom: 4,
   },
 
-  /* ENTRIES */
   entry: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 12,
   },
   titleBold: {
     fontFamily: "Helvetica-Bold",
@@ -100,22 +97,29 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  /* BULLETS */
-  bullet: {
+  bulletRow: {
+    flexDirection: "row",
+    marginTop: 3,
+    marginLeft: 8,
+  },
+  bulletDot: {
+    width: 10,
     fontSize: 10,
-    marginLeft: 10,
-    marginTop: 4,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 9.8,
     lineHeight: 1.4,
   },
 });
 
-
 export const ResumePDF = ({ formData }) => {
-  // ✅ Normalize data safely
-  const experienceList = formData.experience || [];
-  const educationList = formData.education || [];
-  const projectList = formData.projects || [];
-  const certificationList = formData.certifications || [];
+  const experienceList = Array.isArray(formData.experience) ? formData.experience : [];
+  const educationList = Array.isArray(formData.education) ? formData.education : [];
+  const projectList = Array.isArray(formData.projects) ? formData.projects : [];
+  const certificationList = Array.isArray(formData.certifications)
+    ? formData.certifications
+    : [];
 
   const languagesText =
     typeof formData.languages === "string"
@@ -127,96 +131,129 @@ export const ResumePDF = ({ formData }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-
         {/* HEADER */}
         <View style={styles.header}>
-          <Text style={styles.name}>{formData.name}</Text>
+          <Text style={styles.name}>{formData.name || "Your Name"}</Text>
 
           <View style={styles.contactRow}>
-            <Text style={styles.contactItem}>{formData.email}</Text>
-            <Text>|</Text>
-            <Text style={styles.contactItem}>{formData.phone}</Text>
-            <Text>|</Text>
-            {formData.linkedIn && (
+            {formData.email ? (
+              <Text style={styles.contactItem}>{formData.email}</Text>
+            ) : null}
+
+            {formData.email && formData.phone ? <Text>|</Text> : null}
+
+            {formData.phone ? (
+              <Text style={styles.contactItem}>{formData.phone}</Text>
+            ) : null}
+
+            {(formData.email || formData.phone) && formData.linkedIn ? <Text>|</Text> : null}
+
+            {formData.linkedIn ? (
               <Link src={formData.linkedIn} style={styles.contactItem}>
                 LinkedIn
               </Link>
-            )}
-            <Text>|</Text>
-            {formData.github && (
+            ) : null}
+
+            {(formData.email || formData.phone || formData.linkedIn) && formData.github ? (
+              <Text>|</Text>
+            ) : null}
+
+            {formData.github ? (
               <Link src={formData.github} style={styles.contactItem}>
                 GitHub
               </Link>
-            )}
+            ) : null}
           </View>
 
-          {formData.address && (
+          {formData.address ? (
             <Text style={styles.address}>{formData.address}</Text>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.divider} />
 
         {/* EDUCATION */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Education</Text>
-          <View style={styles.divider} />
-          {educationList.map((edu, i) => (
-            <View key={i} style={styles.entry}>
-              <View style={styles.rowBetween}>
-                <Text style={styles.titleBold}>{edu.institution}</Text>
-                <Text style={styles.meta}>{edu.year}</Text>
+        {educationList.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Education</Text>
+            <View style={styles.divider} />
+
+            {educationList.map((edu, i) => (
+              <View key={i} style={styles.entry}>
+                <View style={styles.rowBetween}>
+                  <Text style={styles.titleBold}>{edu.institution || ""}</Text>
+                  <Text style={styles.meta}>{edu.year || ""}</Text>
+                </View>
+
+                <View style={styles.rowBetween}>
+                  <Text style={styles.text}>{edu.degree || ""}</Text>
+                  {edu.cgpa ? <Text style={styles.meta}>CGPA: {edu.cgpa}</Text> : null}
+                </View>
               </View>
-              <View style={styles.rowBetween}>
-                <Text style={styles.text}>{edu.degree}</Text>
-                {edu.cgpa && <Text style={styles.meta}>CGPA: {edu.cgpa}</Text>}
-              </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
 
         {/* PROJECTS */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Projects</Text>
-          <View style={styles.divider} />
-          {projectList.map((project, i) => (
-            <View key={i} style={styles.entry}>
-              <Text style={styles.titleBold}>{project.title}</Text>
-              <Text style={styles.description}>{project.description}</Text>
-              {project.technologies && (
-                <Text style={styles.technologies}>
-                  Technologies: {project.technologies}
-                </Text>
-              )}
-              {project.link && (
-                <Link src={project.link} style={styles.link}>
-                  Project Link
-                </Link>
-              )}
-            </View>
-          ))}
-        </View>
+        {projectList.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Projects</Text>
+            <View style={styles.divider} />
+
+            {projectList.map((project, i) => (
+              <View key={i} style={styles.entry}>
+                <Text style={styles.titleBold}>{project.title || ""}</Text>
+
+                {project.description ? (
+                  <Text style={styles.description}>{project.description}</Text>
+                ) : null}
+
+                {project.technologies ? (
+                  <Text style={styles.technologies}>
+                    Technologies: {project.technologies}
+                  </Text>
+                ) : null}
+
+                {project.link ? (
+                  <Link src={project.link} style={styles.link}>
+                    Project Link
+                  </Link>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* EXPERIENCE */}
-        
         {experienceList.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Experience</Text>
             <View style={styles.divider} />
+
             {experienceList.map((exp, i) => (
               <View key={i} style={styles.entry}>
                 <View style={styles.rowBetween}>
-                  <Text style={styles.titleBold}>{exp.company}</Text>
-                  <Text style={styles.meta}>{exp.duration}</Text>
+                  <Text style={styles.titleBold}>{exp.company || ""}</Text>
+                  <Text style={styles.meta}>{exp.duration || ""}</Text>
                 </View>
-                <Text style={styles.text}>{exp.role}</Text>
 
-                {/* ✅ Handle string responsibilities */}
-                {exp.responsibilities && (
-                  <Text style={styles.bullet}>
-                    • {exp.responsibilities}
-                  </Text>
-                )}
+                {exp.role ? <Text style={styles.text}>{exp.role}</Text> : null}
+
+                {Array.isArray(exp.responsibilities) && exp.responsibilities.length > 0
+                  ? exp.responsibilities.map((resp, idx) => (
+                      <View key={idx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{resp}</Text>
+                      </View>
+                    ))
+                  : exp.responsibilities
+                  ? (
+                    <View style={styles.bulletRow}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>{exp.responsibilities}</Text>
+                    </View>
+                  )
+                  : null}
               </View>
             ))}
           </View>
@@ -227,19 +264,20 @@ export const ResumePDF = ({ formData }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
             <View style={styles.divider} />
-            {formData.skills && (
+
+            {formData.skills ? (
               <Text style={styles.text}>
                 <Text style={styles.titleBold}>Technical Skills: </Text>
                 {formData.skills}
               </Text>
-            )}
+            ) : null}
 
-            {languagesText && (
+            {languagesText ? (
               <Text style={[styles.text, { marginTop: 4 }]}>
                 <Text style={styles.titleBold}>Languages: </Text>
                 {languagesText}
               </Text>
-            )}
+            ) : null}
           </View>
         )}
 
@@ -248,22 +286,25 @@ export const ResumePDF = ({ formData }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Certifications</Text>
             <View style={styles.divider} />
+
             {certificationList.map((cert, i) => (
               <View key={i} style={styles.entry}>
-                <Text style={styles.titleBold}>{cert.title}</Text>
+                <Text style={styles.titleBold}>{cert.title || ""}</Text>
+
                 <Text style={styles.text}>
-                  {cert.issuer} {cert.year && `(${cert.year})`}
+                  {cert.issuer || ""}
+                  {cert.year ? ` (${cert.year})` : ""}
                 </Text>
-                {cert.link && (
+
+                {cert.link ? (
                   <Link src={cert.link} style={styles.link}>
                     Certification Link
                   </Link>
-                )}
+                ) : null}
               </View>
             ))}
           </View>
         )}
-
       </Page>
     </Document>
   );

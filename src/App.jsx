@@ -1,18 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaCircleUser } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
 import ResumeForm from "./components/ResumeForm";
 import ResumePreview from "./components/ResumePreview";
 import "./App.css";
 import PDFDownloadButton from "./components/PDFDownloadButton.jsx";
-import Login from "./components/Modals/Login.jsx";
-import Signup from "./components/Modals/Signup.jsx";
 import { details } from "./Data.js";
 import { API_BASE } from "./config.js";
 import toast from "react-hot-toast";
-import UserInfoModal from "./components/Modals/UserInfoModal.jsx";
 import DeleteConfirmationModal from "./components/Modals/DeleteConfirmationModal.jsx";
+import {
+  LuFileText,
+  LuDownload,
+  LuFolderOpen,
+  LuPencil,
+  LuTrash2,
+  LuPlus,
+  LuChevronDown,
+  LuX,
+  LuEye,
+} from "react-icons/lu";
 
 const App = () => {
+  const navigate = useNavigate();
+  const componentRef = useRef();
+
   const emptyResume = {
     name: "",
     email: "",
@@ -29,35 +40,19 @@ const App = () => {
   };
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userName, setUserName] = useState(
-    localStorage.getItem("name") || "GuestUser"
-  );
-  const [userEmail, setUserEmail] = useState(
-    localStorage.getItem("email") || ""
-  );
-
   const [resumeList, setResumeList] = useState([]);
-  const [formData, setFormData] = useState(details);
+  const [formData, setFormData] = useState(details || emptyResume);
 
   const [currentResumeId, setCurrentResumeId] = useState(null);
   const [currentTitle, setCurrentTitle] = useState("");
   const [deleteResumeId, setDeleteResumeId] = useState(null);
   const [renameResumeId, setRenameResumeId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
-
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
-  const [showUpdateInfoModal, setShowUpdateInfoModal] = useState(false);
   const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] =
     useState(false);
 
-  const [showRenameInput, setShowRenameInput] = useState(false);
-
-  const componentRef = useRef();
-
   const isLoggedIn = !!localStorage.getItem("token");
-
-  const [showSignup, setShowSignup] = useState(false);
+  const role = localStorage.getItem("role");
 
   /* ================= LOAD RESUMES ================= */
 
@@ -65,353 +60,438 @@ const App = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const res = await fetch(`${API_BASE}/api/resumes`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await fetch(`${API_BASE}/api/resumes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const data = await res.json();
-    setResumeList(Array.isArray(data) ? data : []);
+      const data = await res.json();
+      setResumeList(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load resumes:", error);
+      toast.error("Failed to load resumes");
+      setResumeList([]);
+    }
   }
 
   async function loadSingleResume(resumeId) {
     const token = localStorage.getItem("token");
+    if (!token) return;
 
-    const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const resume = await res.json();
-
-    if (resume) {
-      setCurrentResumeId(resume._id);
-      setCurrentTitle(resume.title || "");
-      setFormData({
-        ...emptyResume,
-        ...resume.data,
+    try {
+      const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      localStorage.setItem("activeResumeId", resumeId);
+
+      const resume = await res.json();
+
+      if (!res.ok) {
+        toast.error(resume?.message || "Failed to load resume");
+        return;
+      }
+
+      if (resume) {
+        setCurrentResumeId(resume._id);
+        setCurrentTitle(resume.title || "Untitled Resume");
+        setFormData({
+          ...emptyResume,
+          ...(resume.data || {}),
+        });
+        localStorage.setItem("activeResumeId", resumeId);
+        setIsDropdownOpen(false);
+        toast.success("Resume loaded");
+      }
+    } catch (error) {
+      console.error("Failed to load single resume:", error);
+      toast.error("Failed to load resume");
     }
   }
 
   /* ================= RENAME & DELETE ================= */
 
   async function renameResume(resumeId, newTitle) {
-    await fetch(`${API_BASE}/api/resume/${resumeId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ title: newTitle }),
-    });
-
-    if (resumeId === currentResumeId) {
-      setCurrentTitle(newTitle);
+    if (!newTitle.trim()) {
+      toast.error("Resume title cannot be empty");
+      return;
     }
 
-    loadResumeList();
-  }
-  async function deleteAccount() {
-    await fetch(`${API_BASE}/api/deleteAccount`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    try {
+      const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ title: newTitle.trim() }),
+      });
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("name");
-    window.location.reload();
-    toast.success("Account deleted successfully");
+      if (!res.ok) {
+        toast.error("Failed to rename resume");
+        return;
+      }
+
+      if (resumeId === currentResumeId) {
+        setCurrentTitle(newTitle.trim());
+      }
+
+      setRenameResumeId(null);
+      setRenameValue("");
+      await loadResumeList();
+      toast.success("Resume renamed");
+    } catch (error) {
+      console.error("Failed to rename resume:", error);
+      toast.error("Failed to rename resume");
+    }
   }
 
   async function deleteResume(resumeId) {
-    console.log("Delete Func");
-    await fetch(`${API_BASE}/api/resume/${resumeId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    try {
+      const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    if (resumeId === currentResumeId) {
-      setFormData(emptyResume);
-      setCurrentResumeId(null);
-      setCurrentTitle("");
-      localStorage.removeItem("activeResumeId");
+      if (!res.ok) {
+        toast.error("Failed to delete resume");
+        return;
+      }
+
+      if (resumeId === currentResumeId) {
+        setFormData(emptyResume);
+        setCurrentResumeId(null);
+        setCurrentTitle("");
+        localStorage.removeItem("activeResumeId");
+      }
+
+      setDeleteResumeId(null);
+      setShowDeleteConfirmationModal(false);
+      await loadResumeList();
+      toast.success("Resume deleted");
+    } catch (error) {
+      console.error("Failed to delete resume:", error);
+      toast.error("Failed to delete resume");
     }
-    setDeleteResumeId(null);
-    loadResumeList();
-    toast.success("Resume Deleted");
-    setShowDeleteConfirmationModal(false);
+  }
+
+  function createNewResume() {
+    setFormData(emptyResume);
+    setCurrentResumeId(null);
+    setCurrentTitle("");
+    localStorage.removeItem("activeResumeId");
+    setIsDropdownOpen(false);
+    toast.success("Started a new resume");
   }
 
   useEffect(() => {
     if (isLoggedIn) {
       loadResumeList();
+
+      const activeResumeId = localStorage.getItem("activeResumeId");
+      if (activeResumeId) {
+        loadSingleResume(activeResumeId);
+      }
     }
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    function handleOutsideClick(e) {
+      if (!e.target.closest(".resume-dropdown-wrapper")) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isDropdownOpen]);
+
   function clearformData() {
     setFormData(emptyResume);
+    toast.success("Form cleared");
   }
-  /* ================= AUTH ================= */
-
-  /* ================= UI (UNCHANGED STYLING) ================= */
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="pt-[0px]min-h-screen bg-orange-200">
-        <header className="bg-[#F26522] shadow-lg mb-2">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-bold">
-                Resume Builder
-              </h1>
-              <div className="flex gap-4">
-                {/* PDF Download button */}
-                <div>
-                  {formData.name && <PDFDownloadButton formData={formData} />}
-                  {!formData.name && (
-                    <button
-                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base opacity-50 cursor-not-allowed"
-                      disabled
-                    >
-                      Download PDF
-                    </button>
-                  )}
+    <div className="min-h-screen bg-stone-100">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {/* Left */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+                <LuFileText size={22} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-stone-900 sm:text-3xl">
+                  Resume Builder
+                </h1>
+                <p className="text-sm text-stone-500">
+                  Create, save, preview, and export ATS-friendly resumes
+                </p>
+              </div>
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* PDF Download */}
+              {formData.name ? (
+                <div className="inline-flex">
+                  <PDFDownloadButton formData={formData} />
                 </div>
-                {/* New Resume button */}
-                <div>
+              ) : (
+                <button
+                  className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-4 py-3 text-sm font-semibold text-stone-400 cursor-not-allowed"
+                  disabled
+                >
+                  <LuDownload size={16} />
+                  Download PDF
+                </button>
+              )}
+
+              {/* New Resume */}
+              <button
+                onClick={createNewResume}
+                className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+              >
+                <LuPlus size={16} />
+                New Resume
+              </button>
+
+              {/* My Resumes */}
+              {isLoggedIn && (
+                <div className="relative resume-dropdown-wrapper">
                   <button
-                    onClick={() => {
-                      setFormData(details);
-                      setCurrentResumeId(null);
-                      setCurrentTitle("");
-                    }}
-                    className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
                   >
-                    + New Resume
+                    <LuFolderOpen size={16} />
+                    My Resumes
+                    <LuChevronDown
+                      size={16}
+                      className={`transition ${isDropdownOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
-                </div>
-                {/* Login and Logout button */}
-                <div className="flex items-center gap-3">
-                  {!isLoggedIn ? (
-                    <button
-                      onClick={() => setShowLoginModal(true)}
-                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
-                    >
-                      Login to Save
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem("token");
-                        localStorage.removeItem("userId");
-                        localStorage.removeItem("name");
-                        window.location.reload();
-                      }}
-                      className="inline-block px-4 py-2 border-2 border-white bg-white text-orange-400 font-semibold rounded-lg text-sm sm:text-base hover:bg-orange-500/50 hover:text-white hover:cursor-pointer transition-colors duration-200 active:scale-98"
-                    >
-                      Logout
-                    </button>
-                  )}
-                </div>
-                {/* Dropdown for existing resumes */}
-                {isLoggedIn && (
-                  <div>
-                    {/* Dropdown button */}
-                    <button
-                      onClick={() => setIsDropdownOpen((prev) => !prev)}
-                      className="inline-block px-4 py-2 border-2 hover:text-white border-white bg-white hover:bg-orange-500/50 active:scale-98 hover:cursor-pointer text-orange-400 font-semibold rounded-lg transition-colors duration-200 text-sm sm:text-base"
-                    >
-                      My Resumes ▾
-                    </button>
-                    {/* Dropdown Menu */}
-                    {isDropdownOpen && (
-                      <div className="absolute right-20 top-15 w-64 bg-white shadow-xl rounded z-50 border">
-                        {resumeList.length == 0 ? (
-                          <div className="px-4 py-2 text-blue-600 border-b hover:bg-gray-100">
-                            No Resume Saved
-                          </div>
-                        ) : (
-                          <div className="max-h-64 overflow-y-auto">
-                            {resumeList.map((resume) => (
-                              <div
-                                key={resume._id}
-                                className="px-4 py-2 border-b hover:bg-gray-100"
-                              >
-                                {renameResumeId === resume._id ? (
+
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 top-[110%] z-50 w-[320px] overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-2xl">
+                      <div className="border-b border-stone-100 px-4 py-3">
+                        <h3 className="text-sm font-bold text-stone-900">
+                          Saved Resumes
+                        </h3>
+                        <p className="text-xs text-stone-500">
+                          Open, rename, or delete your resumes
+                        </p>
+                      </div>
+
+                      {resumeList.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-sm text-stone-500">
+                          No resumes saved yet
+                        </div>
+                      ) : (
+                        <div className="max-h-80 overflow-y-auto">
+                          {resumeList.map((resume) => (
+                            <div
+                              key={resume._id}
+                              className="border-b border-stone-100 px-4 py-3 last:border-b-0"
+                            >
+                              {renameResumeId === resume._id ? (
+                                <div className="space-y-3">
                                   <input
                                     type="text"
                                     value={renameValue}
-                                    onChange={(e) =>
-                                      setRenameValue(e.target.value)
-                                    }
-                                    className="w-full border px-2 py-1 rounded"
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                     autoFocus
                                   />
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      loadSingleResume(resume._id);
-                                      setIsDropdownOpen(false);
-                                    }}
-                                    className="block w-full text-left font-medium cursor-pointer hover:text-gray-500"
-                                  >
-                                    {resume.title || "Untitled Resume"}
-                                  </button>
-                                )}
-
-                                <div className="flex gap-3 text-sm mt-1">
-                                  {renameResumeId === resume._id ? (
+                                  <div className="flex gap-2">
                                     <button
-                                      className="text-green-600 cursor-pointer"
+                                      className="rounded-xl bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700"
+                                      onClick={() =>
+                                        renameResume(resume._id, renameValue)
+                                      }
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      className="rounded-xl border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50"
                                       onClick={() => {
-                                        renameResume(resume._id, renameValue);
                                         setRenameResumeId(null);
                                         setRenameValue("");
                                       }}
                                     >
-                                      Save
+                                      Cancel
                                     </button>
-                                  ) : (
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => loadSingleResume(resume._id)}
+                                    className="block w-full text-left"
+                                  >
+                                    <p className="font-semibold text-stone-900 hover:text-orange-600">
+                                      {resume.title || "Untitled Resume"}
+                                    </p>
+                                    <p className="mt-1 text-xs text-stone-500">
+                                      {resume.updatedAt
+                                        ? `Updated ${new Date(
+                                            resume.updatedAt
+                                          ).toLocaleDateString("en-IN")}`
+                                        : "Saved resume"}
+                                    </p>
+                                  </button>
+
+                                  <div className="mt-3 flex flex-wrap gap-2">
                                     <button
-                                      className="text-blue-500 cursor-pointer"
+                                      onClick={() => loadSingleResume(resume._id)}
+                                      className="inline-flex items-center gap-1 rounded-xl border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                                    >
+                                      <LuEye size={14} />
+                                      Open
+                                    </button>
+
+                                    <button
                                       onClick={() => {
                                         setRenameResumeId(resume._id);
                                         setRenameValue(
                                           resume.title || "Untitled Resume"
                                         );
                                       }}
+                                      className="inline-flex items-center gap-1 rounded-xl border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
                                     >
+                                      <LuPencil size={14} />
                                       Rename
                                     </button>
-                                  )}
 
-                                  <button
-                                    onClick={() => {
-                                      setDeleteResumeId(resume._id);
-                                      setShowDeleteConfirmationModal(true);
-                                    }}
-                                    className="text-red-600 cursor-pointer"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/*user info*/}
-                <div
-                  className="text-white font-medium text-sm sm:text-base flex cursor-pointer items-center"
-                  onClick={() => setShowUserInfoModal(true)}
-                >
-                  <FaCircleUser className="inline mr-2 text-4xl" />
-                  <p>{userName || "GuestUser"}</p>
+                                    <button
+                                      onClick={() => {
+                                        setDeleteResumeId(resume._id);
+                                        setShowDeleteConfirmationModal(true);
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100"
+                                    >
+                                      <LuTrash2 size={14} />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Optional Back CTA for employers */}
+              {role === "employer" && (
+                <button
+                  onClick={() => navigate("/employer-dashboard")}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
+                >
+                  Dashboard
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+        {/* Top Summary */}
+        <section className="mb-6 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Current Resume
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-stone-900">
+                {currentTitle || "Untitled Resume"}
+              </h2>
+              <p className="mt-1 text-sm text-stone-500">
+                Changes are reflected live in the preview panel
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                <p className="text-xs font-semibold text-stone-400">Saved Resumes</p>
+                <p className="text-lg font-black text-stone-900">{resumeList.length}</p>
+              </div>
+              <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                <p className="text-xs font-semibold text-stone-400">Preview</p>
+                <p className="text-lg font-black text-stone-900">Live</p>
               </div>
             </div>
           </div>
-        </header>
+        </section>
 
-        <main className="py-6">
-          <div className="mx-2 flex flex-col xl:flex-row gap-6">
-            <div className="w-full xl:w-1/2">
-              <div className="bg-[#FFF9F5] rounded-xl shadow-2xl p-2">
-                <div className="relative p-4 sm:p-6 lg:p-8 max-h-[80vh] overflow-y-auto">
-                  <ResumeForm
-                    formData={formData}
-                    setFormData={setFormData}
-                    currentResumeId={currentResumeId}
-                    currentTitle={currentTitle}
-                    loadResumeList={loadResumeList}
-                    clearformData={clearformData}
-                  />
-                </div>
-              </div>
+        {/* Builder Layout */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          {/* Form */}
+          <div className="rounded-3xl border border-stone-200 bg-white shadow-sm">
+            <div className="border-b border-stone-100 px-5 py-4">
+              <h3 className="text-lg font-black text-stone-900">Edit Resume</h3>
+              <p className="text-sm text-stone-500">
+                Fill your details and save your resume anytime
+              </p>
             </div>
 
-            <div className="w-full xl:w-1/2">
-              <div className="bg-white rounded-xl shadow-2xl p-2">
-                <div
-                  ref={componentRef}
-                  className="p-4 sm:p-6 lg:p-8 max-h-[80vh] overflow-y-auto"
-                >
-                  <ResumePreview formData={formData} />
-                </div>
+            <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 sm:p-5">
+              <ResumeForm
+                formData={formData}
+                setFormData={setFormData}
+                currentResumeId={currentResumeId}
+                currentTitle={currentTitle}
+                loadResumeList={loadResumeList}
+                clearformData={clearformData}
+                setCurrentResumeId={setCurrentResumeId}
+                setCurrentTitle={setCurrentTitle}
+              />
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="rounded-3xl border border-stone-200 bg-white shadow-sm">
+            <div className="border-b border-stone-100 px-5 py-4">
+              <h3 className="text-lg font-black text-stone-900">Live Preview</h3>
+              <p className="text-sm text-stone-500">
+                See how your resume looks before downloading
+              </p>
+            </div>
+
+            <div
+              ref={componentRef}
+              className="max-h-[calc(100vh-220px)] overflow-y-auto bg-stone-50 p-4 sm:p-6"
+            >
+              <div className="mx-auto max-w-[850px] rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
+                <ResumePreview formData={formData} />
               </div>
             </div>
           </div>
-        </main>
-      </div>
-      {showLoginModal && (
-        <Login
-          onLogin={(name) => {
-            setUserName(name);
-            setShowLoginModal(false);
-            loadResumeList();
-          }}
-          onSwitchToSignup={() => {
-            setShowLoginModal(false);
-            setShowSignup(true);
-          }}
-          onClose={() => setShowLoginModal(false)}
-          setShowLoginModal={setShowLoginModal}
-        />
-      )}
-      {showSignup && (
-        <Signup
-          onSignup={() => {
-            setShowSignup(false);
-            setShowLoginModal(true);
-          }}
-          onSwitchToLogin={() => {
-            setShowSignup(false);
-            setShowLoginModal(true);
-          }}
-          setShowSignup={setShowSignup}
-        />
-      )}
-      {showUserInfoModal && (
-        <UserInfoModal
-          setShowUserInfoModal={setShowUserInfoModal}
-          deleteResume={deleteResume}
-          deleteAccount={deleteAccount}
-          setShowUpdateInfoModal={setShowUpdateInfoModal}
-          userName={userName}
-          userEmail={userEmail}
-          isLoggedIn={isLoggedIn}
-          onDeleteAccount={() => setShowDeleteConfirmationModal(true)}
-        />
-      )}
-      {showDeleteConfirmationModal && (
-        <DeleteConfirmationModal
-          setShowDeleteConfirmationModal={setShowDeleteConfirmationModal}
-          setDeleteResumeId={null}
-          message="Do you want to delete your account permanently?"
-          onDelete={() => {
-            deleteAccount();
-          }}
-        />
-      )}
+        </div>
+      </main>
+
+      {/* Single Correct Delete Modal */}
       {showDeleteConfirmationModal && deleteResumeId !== null && (
         <DeleteConfirmationModal
           setShowDeleteConfirmationModal={setShowDeleteConfirmationModal}
           setDeleteResumeId={setDeleteResumeId}
           message="Do you want to delete this resume permanently?"
           onDelete={() => {
-            console.log(deleteResumeId);
             deleteResume(deleteResumeId);
           }}
         />
