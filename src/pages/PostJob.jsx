@@ -42,6 +42,7 @@ export default function PostJob() {
   const [touched, setTouched] = useState({});
   const [hydrated, setHydrated] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const suggestedSkills = [
     "React",
@@ -80,6 +81,34 @@ export default function PostJob() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
   }
+
+  // ---------------- FETCH EMPLOYER PROFILE ----------------
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch(`${API_BASE}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.companyName) {
+            setJob((prev) => ({ ...prev, company: data.companyName }));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+
+    if (token) {
+      fetchProfile();
+    } else {
+      setProfileLoading(false);
+    }
+  }, [token]);
 
   // ---------------- DRAFT RESTORE ----------------
   useEffect(() => {
@@ -337,7 +366,6 @@ export default function PostJob() {
 
     setTouched({
       title: true,
-      company: true,
       location: true,
       type: true,
       description: true,
@@ -624,17 +652,13 @@ export default function PostJob() {
                     <input
                       name="company"
                       value={job.company}
-                      onChange={handleChange}
-                      onBlur={() => markTouched("company")}
-                      required
+                      disabled
                       placeholder="e.g. Microsoft"
-                      className={inputClass("company")}
+                      className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none cursor-not-allowed text-stone-600"
                     />
-                    {showFieldError("company") && (
-                      <p className="mt-1 text-xs font-medium text-red-600">
-                        {errors.company}
-                      </p>
-                    )}
+                    <p className="mt-1 text-xs text-stone-500">
+                      This is auto-filled from your employer profile
+                    </p>
                   </div>
 
                   <div>

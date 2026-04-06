@@ -31,7 +31,7 @@ export default function Jobs() {
   const [location, setLocation] = useState(initialLocation);
   const [salary, setSalary] = useState("");
   const [type, setType] = useState("");
-  const [remote, setRemote] = useState(false);
+  const [workMode, setWorkMode] = useState("");
 
   useEffect(() => {
     loadJobs({
@@ -39,7 +39,7 @@ export default function Jobs() {
       location: initialLocation,
       minSalary: "",
       type: "",
-      remote: false,
+      workMode: "",
     });
   }, []);
 
@@ -54,7 +54,7 @@ export default function Jobs() {
       if (filters.location?.trim()) params.append("location", filters.location.trim());
       if (filters.minSalary) params.append("minSalary", filters.minSalary);
       if (filters.type) params.append("type", filters.type);
-      if (filters.remote) params.append("remote", "true");
+      if (filters.workMode) params.append("workMode", filters.workMode);
 
       const queryString = params.toString();
       const url = queryString
@@ -92,7 +92,7 @@ export default function Jobs() {
       location,
       minSalary: salary,
       type,
-      remote,
+      workMode,
     });
   }
 
@@ -102,7 +102,7 @@ export default function Jobs() {
       location,
       minSalary: salary,
       type,
-      remote,
+      workMode,
     });
   }
 
@@ -111,14 +111,14 @@ export default function Jobs() {
     setLocation("");
     setSalary("");
     setType("");
-    setRemote(false);
+    setWorkMode("");
 
     loadJobs({
       title: "",
       location: "",
       minSalary: "",
       type: "",
-      remote: false,
+      workMode: "",
     });
   }
 
@@ -170,9 +170,9 @@ export default function Jobs() {
     if (location.trim()) count++;
     if (salary) count++;
     if (type) count++;
-    if (remote) count++;
+    if (workMode) count++;
     return count;
-  }, [title, location, salary, type, remote]);
+  }, [title, location, salary, type, workMode]);
 
   return (
     <div className="min-h-screen bg-stone-100">
@@ -302,17 +302,35 @@ export default function Jobs() {
                   />
                 </div>
 
-                {/* Remote */}
+                {/* Work Mode */}
                 <div>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={remote}
-                      onChange={(e) => setRemote(e.target.checked)}
-                      className="h-4 w-4 accent-orange-500"
-                    />
-                    <span className="text-sm font-semibold text-stone-700">Remote only</span>
+                  <label className="mb-3 block text-sm font-semibold text-stone-700">
+                    Work Mode
                   </label>
+
+                  <div className="space-y-2">
+                    {[
+                      { value: "", label: "Any Mode" },
+                      { value: "On-site", label: "On-site" },
+                      { value: "Remote", label: "Remote" },
+                      { value: "Hybrid", label: "Hybrid" },
+                    ].map((item) => (
+                      <label
+                        key={item.value || "any"}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1"
+                      >
+                        <input
+                          type="radio"
+                          name="workMode"
+                          value={item.value}
+                          checked={workMode === item.value}
+                          onChange={(e) => setWorkMode(e.target.value)}
+                          className="h-4 w-4 accent-orange-500"
+                        />
+                        <span className="text-sm text-stone-700">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Actions */}

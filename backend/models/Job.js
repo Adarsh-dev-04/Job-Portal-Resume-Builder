@@ -42,11 +42,6 @@ const jobSchema = new mongoose.Schema(
       required: true
     },
 
-    remote: {
-      type: Boolean,
-      default: false
-    },
-
     // Additional fields for job posting
     category: {
       type: String,
@@ -112,7 +107,7 @@ const jobSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["Full-Time", "Part-Time", "Internship", "Contract", "Remote"],
+      enum: ["Full-Time", "Part-Time", "Internship", "Contract"],
       default: "Full-Time"
     },
 

@@ -10,6 +10,9 @@ import {
   LuLoaderCircle,
   LuTriangleAlert,
   LuCheck,
+  LuPencil,
+  LuX,
+  LuLock,
 } from "react-icons/lu";
 import toast from "react-hot-toast";
 
@@ -31,6 +34,10 @@ export default function EmployerProfile() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const hiringOptions = ["Engineering", "Design", "Marketing", "Sales", "Operations", "HR", "Finance"];
   const industrySamples = ["Technology", "Finance", "Healthcare", "Retail", "Manufacturing", "Education"];
@@ -82,6 +89,8 @@ export default function EmployerProfile() {
   }
 
   function toggleHiringFor(value) {
+    if (!isEditMode) return; // Prevent changes when not in edit mode
+
     setForm((prev) => {
       const current = prev.hiringFor || [];
       const exists = current.includes(value);
@@ -98,7 +107,17 @@ export default function EmployerProfile() {
       return;
     }
 
-    setSaving(true);
+    // Show password confirmation modal
+    setShowPasswordModal(true);
+  }
+
+  async function confirmAndSave(password) {
+    if (!password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+
+    setPasswordLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/users/me`, {
         method: "PUT",
@@ -106,7 +125,10 @@ export default function EmployerProfile() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          password, // Send password for verification
+        }),
       });
 
       let data;
@@ -122,12 +144,31 @@ export default function EmployerProfile() {
       }
 
       toast.success(data?.message || "Profile updated successfully");
+      setShowPasswordModal(false);
+      setPasswordInput("");
+      setIsEditMode(false);
     } catch (error) {
       console.error(error);
       toast.error("Failed to update profile");
     } finally {
-      setSaving(false);
+      setPasswordLoading(false);
     }
+  }
+
+  function getInputClass() {
+    return `mt-2 w-full rounded-xl border px-4 py-2 text-sm outline-none transition ${
+      isEditMode
+        ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+        : "border-stone-200 bg-white cursor-default"
+    }`;
+  }
+
+  function getSelectClass() {
+    return `mt-2 w-full rounded-xl border px-4 py-2 text-sm outline-none transition ${
+      isEditMode
+        ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+        : "border-stone-200 bg-white cursor-default"
+    }`;
   }
 
   if (role !== "employer") {
@@ -152,9 +193,24 @@ export default function EmployerProfile() {
     <div className="min-h-screen bg-stone-100 py-8">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-stone-900">Company Profile</h1>
-          <p className="mt-2 text-stone-600">Manage your company information and hiring preferences</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-stone-900">Company Profile</h1>
+            <p className="mt-2 text-stone-600">
+              {isEditMode
+                ? "Edit your company information and hiring preferences"
+                : "Manage your company information and hiring preferences"}
+            </p>
+          </div>
+          {!isEditMode && (
+            <button
+              onClick={() => setIsEditMode(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600"
+            >
+              <LuPencil size={18} />
+              Edit Profile
+            </button>
+          )}
         </div>
 
         {/* Loading */}
@@ -186,8 +242,9 @@ export default function EmployerProfile() {
                     name="name"
                     value={form.name}
                     onChange={handleChange}
+                    readOnly={!isEditMode}
                     placeholder="Your Full Name"
-                    className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className={getInputClass()}
                   />
                 </div>
 
@@ -222,8 +279,9 @@ export default function EmployerProfile() {
                     name="companyName"
                     value={form.companyName}
                     onChange={handleChange}
+                    readOnly={!isEditMode}
                     placeholder="Your Company Name"
-                    className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className={getInputClass()}
                   />
                 </div>
 
@@ -231,14 +289,31 @@ export default function EmployerProfile() {
                   <label className="block text-sm font-semibold text-stone-700">
                     <LuGlobe className="mb-1 inline" size={16} /> Website
                   </label>
-                  <input
-                    type="text"
-                    name="companyWebsite"
-                    value={form.companyWebsite}
-                    onChange={handleChange}
-                    placeholder="https://example.com"
-                    className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
-                  />
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      name="companyWebsite"
+                      value={form.companyWebsite}
+                      onChange={handleChange}
+                      placeholder="https://example.com"
+                      className={getInputClass()}
+                    />
+                  ) : (
+                    <div className="mt-2">
+                      {form.companyWebsite ? (
+                        <a
+                          href={form.companyWebsite.startsWith('http') ? form.companyWebsite : `https://${form.companyWebsite}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-600 hover:text-orange-700 underline transition-colors"
+                        >
+                          {form.companyWebsite}
+                        </a>
+                      ) : (
+                        <span className="text-stone-400 italic">No website provided</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -249,9 +324,10 @@ export default function EmployerProfile() {
                       name="industry"
                       value={form.industry}
                       onChange={handleChange}
+                      readOnly={!isEditMode}
                       placeholder="e.g., Technology"
                       list="industry-list"
-                      className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                      className={getInputClass()}
                     />
                     <datalist id="industry-list">
                       {industrySamples.map((ind) => (
@@ -266,7 +342,8 @@ export default function EmployerProfile() {
                       name="companySize"
                       value={form.companySize}
                       onChange={handleChange}
-                      className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                      disabled={!isEditMode}
+                      className={getSelectClass()}
                     >
                       <option value="1-10">1-10 employees</option>
                       <option value="11-50">11-50 employees</option>
@@ -285,8 +362,9 @@ export default function EmployerProfile() {
                     name="companyCity"
                     value={form.companyCity}
                     onChange={handleChange}
+                    readOnly={!isEditMode}
                     placeholder="Your Company City"
-                    className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className={getInputClass()}
                   />
                 </div>
 
@@ -296,9 +374,10 @@ export default function EmployerProfile() {
                     name="companyDescription"
                     value={form.companyDescription}
                     onChange={handleChange}
+                    readOnly={!isEditMode}
                     placeholder="Tell candidates about your company..."
                     rows="5"
-                    className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-2 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className={getInputClass()}
                   />
                 </div>
               </div>
@@ -313,14 +392,23 @@ export default function EmployerProfile() {
               <div className="space-y-3 p-8">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {hiringOptions.map((option) => (
-                    <label key={option} className="flex items-center gap-3 rounded-xl border border-stone-200 px-4 py-3 cursor-pointer hover:border-orange-300 hover:bg-orange-50">
+                    <label
+                      key={option}
+                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
+                        isEditMode
+                          ? "cursor-pointer border-stone-200 hover:border-orange-300 hover:bg-orange-50"
+                          : "cursor-default border-stone-200"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={form.hiringFor.includes(option)}
                         onChange={() => toggleHiringFor(option)}
                         className="h-4 w-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500"
                       />
-                      <span className="text-sm font-medium text-stone-700">{option}</span>
+                      <span className="text-sm font-medium text-stone-700">
+                        {option}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -328,30 +416,101 @@ export default function EmployerProfile() {
             </div>
 
             {/* Save Button */}
-            <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm">
-              <div>
-                <p className="text-sm text-stone-600">
-                  Make sure all information is accurate before saving
-                </p>
+            {isEditMode && (
+              <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm">
+                <div>
+                  <p className="text-sm text-stone-600">
+                    Make sure all information is accurate before saving
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      fetchProfile(); // Reset to original values
+                    }}
+                    className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
+                  >
+                    {saving ? (
+                      <>
+                        <LuLoaderCircle className="animate-spin" size={18} />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <LuSave size={18} />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
-              >
-                {saving ? (
-                  <>
-                    <LuLoaderCircle className="animate-spin" size={18} />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <LuSave size={18} />
-                    Save Changes
-                  </>
-                )}
-              </button>
-            </div>
+            )}
+
+            {/* Password Confirmation Modal */}
+            {showPasswordModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                      <LuLock size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-stone-900">Confirm Password</h3>
+                      <p className="text-sm text-stone-500">Enter your password to save changes</p>
+                    </div>
+                  </div>
+
+                  <input
+                    type="password"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && confirmAndSave(passwordInput)}
+                    placeholder="Enter your password"
+                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 mb-6"
+                    autoFocus
+                  />
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowPasswordModal(false);
+                        setPasswordInput("");
+                      }}
+                      disabled={passwordLoading}
+                      className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <LuX className="inline mr-2" size={16} />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmAndSave(passwordInput)}
+                      disabled={passwordLoading || !passwordInput.trim()}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                    >
+                      {passwordLoading ? (
+                        <>
+                          <LuLoaderCircle className="animate-spin" size={16} />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <LuCheck size={16} />
+                          Confirm
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -5,7 +5,23 @@ const jwt = require("jsonwebtoken");
 /* ================= REGISTER ================= */
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, companyName } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      // candidate fields
+      phone,
+      city,
+      headline,
+      experience,
+      // employer fields
+      companyName,
+      companyWebsite,
+      industry,
+      companySize,
+      companyCity,
+    } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -14,7 +30,21 @@ exports.register = async (req, res) => {
       email,
       password: hashedPassword,
       role: role || "candidate",
-      companyName: role === "employer" ? companyName : undefined,
+      // candidate fields
+      ...(role === "candidate" && {
+        phone: phone || "",
+        city: city || "",
+        headline: headline || "",
+        experience: experience || "fresher",
+      }),
+      // employer fields
+      ...(role === "employer" && {
+        companyName: companyName || "",
+        companyWebsite: companyWebsite || "",
+        industry: industry || "",
+        companySize: companySize || "1-10",
+        companyCity: companyCity || "",
+      }),
     });
 
     await user.save();

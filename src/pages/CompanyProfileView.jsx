@@ -12,14 +12,12 @@ import {
   LuLoaderCircle,
   LuTriangleAlert,
   LuRefreshCw,
-  LuMailOpen,
   LuShield,
 } from "react-icons/lu";
 
 export default function CompanyProfileView() {
-  const { companyName } = useParams();
+  const { companyId } = useParams();
   const navigate = useNavigate();
-  const decodedCompanyName = decodeURIComponent(companyName);
 
   const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
@@ -28,17 +26,34 @@ export default function CompanyProfileView() {
 
   useEffect(() => {
     loadCompanyProfile();
-  }, [companyName]);
+  }, [companyId]);
 
   async function loadCompanyProfile() {
     setLoading(true);
     setPageError("");
 
     try {
-      // Fetch all jobs from the company first to find the employer
-      const jobsRes = await fetch(
-        `${API_BASE}/api/jobs?company=${encodeURIComponent(decodedCompanyName)}`
-      );
+      // Fetch company details by ID
+      const companyRes = await fetch(`${API_BASE}/api/users/${companyId}`);
+
+      let companyData;
+      try {
+        companyData = await companyRes.json();
+      } catch {
+        companyData = null;
+      }
+
+      if (!companyRes.ok || !companyData) {
+        setPageError("Company not found");
+        setCompany(null);
+        setJobs([]);
+        return;
+      }
+
+      setCompany(companyData);
+
+      // Fetch jobs from this company
+      const jobsRes = await fetch(`${API_BASE}/api/jobs?employerId=${companyId}`);
 
       let jobsData = [];
       try {
@@ -47,63 +62,12 @@ export default function CompanyProfileView() {
         jobsData = [];
       }
 
-      if (!jobsRes.ok) {
-        setPageError("Failed to load company information");
-        setCompany(null);
-        return;
-      }
-
       setJobs(Array.isArray(jobsData) ? jobsData : []);
-
-      // Get company details from the first job's employer
-      if (jobsData && jobsData.length > 0) {
-        const firstJob = jobsData[0];
-        if (firstJob.employerId) {
-          try {
-            const companyRes = await fetch(
-              `${API_BASE}/api/companies/${firstJob.employerId}`
-            );
-
-            let companyData;
-            try {
-              companyData = await companyRes.json();
-            } catch {
-              companyData = null;
-            }
-
-            if (companyRes.ok && companyData) {
-              setCompany(companyData);
-            } else {
-              // Fallback to basic company info from jobs
-              setCompany({
-                companyName: decodedCompanyName,
-                companyWebsite: "",
-                industry: "",
-                companySize: "1-10",
-                companyCity: "",
-                companyDescription: "",
-                isVerified: false,
-              });
-            }
-          } catch {
-            setCompany({
-              companyName: decodedCompanyName,
-              companyWebsite: "",
-              industry: "",
-              companySize: "1-10",
-              companyCity: "",
-              companyDescription: "",
-              isVerified: false,
-            });
-          }
-        }
-      } else {
-        setPageError("Company not found");
-      }
     } catch (err) {
       console.error("Failed to load company profile:", err);
       setPageError("Failed to load company information");
       setCompany(null);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -175,7 +139,10 @@ export default function CompanyProfileView() {
 
                   <div className="flex-1 text-white">
                     <div className="flex items-center gap-3">
-                      <h1 className="text-4xl font-black">{company.companyName}</h1>
+                      <h1 className="text-4xl font-black">
+                        {company.companyName || "Company"}
+                      </h1>
+
                       {company.isVerified && (
                         <div className="flex items-center gap-1 rounded-full border border-white/30 bg-white/20 px-3 py-1 backdrop-blur">
                           <LuBadgeCheck size={18} />
@@ -195,10 +162,13 @@ export default function CompanyProfileView() {
                           <span>{company.companyCity}</span>
                         </div>
                       )}
+
                       {company.companySize && (
                         <div className="flex items-center gap-2">
                           <LuUsers size={16} />
-                          <span>{companySizeLabel[company.companySize] || company.companySize}</span>
+                          <span>
+                            {companySizeLabel[company.companySize] || company.companySize}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -237,7 +207,9 @@ export default function CompanyProfileView() {
                     Company Size
                   </div>
                   <p className="mt-2 text-sm font-medium text-stone-900">
-                    {companySizeLabel[company.companySize] || company.companySize}
+                    {company.companySize
+                      ? companySizeLabel[company.companySize] || company.companySize
+                      : "Not specified"}
                   </p>
                 </div>
 
@@ -248,7 +220,9 @@ export default function CompanyProfileView() {
                       <LuBriefcase size={16} />
                       Industry
                     </div>
-                    <p className="mt-2 text-sm font-medium text-stone-900">{company.industry}</p>
+                    <p className="mt-2 text-sm font-medium text-stone-900">
+                      {company.industry}
+                    </p>
                   </div>
                 )}
 
@@ -277,7 +251,9 @@ export default function CompanyProfileView() {
             {company.companyDescription && (
               <div className="rounded-3xl border border-stone-200 bg-white p-8 shadow-sm">
                 <h2 className="text-2xl font-bold text-stone-900">About Company</h2>
-                <p className="mt-4 whitespace-pre-wrap text-stone-700">{company.companyDescription}</p>
+                <p className="mt-4 whitespace-pre-wrap text-stone-700">
+                  {company.companyDescription}
+                </p>
               </div>
             )}
 
@@ -330,6 +306,7 @@ export default function CompanyProfileView() {
                                 {job.location}
                               </div>
                             )}
+
                             {job.type && (
                               <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
                                 {job.type}
@@ -337,6 +314,7 @@ export default function CompanyProfileView() {
                             )}
                           </div>
                         </div>
+
                         <span className="text-xs font-bold text-orange-600">View →</span>
                       </div>
                     </a>

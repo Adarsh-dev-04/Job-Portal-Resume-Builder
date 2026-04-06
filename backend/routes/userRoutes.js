@@ -5,6 +5,12 @@ const auth = require("../middleware/auth");
 const userController = require("../controllers/userController");
 const adminController = require("../controllers/adminController");
 
+// GET CURRENT USER (STANDARD REST ENDPOINT)
+router.get("/me", auth, userController.getProfile);
+
+// UPDATE CURRENT USER PROFILE
+router.put("/me", auth, userController.updateProfile);
+
 // GET USER PROFILE
 router.get("/profile", auth, userController.getProfile);
 
@@ -16,6 +22,12 @@ router.get("/company", auth, userController.getCompany);
 
 // UPDATE COMPANY PROFILE
 router.put("/company", auth, userController.updateProfile);
+
+// GET ALL COMPANIES (PUBLIC)
+router.get("/companies", userController.getAllCompanies);
+
+// GET USER BY ID (PUBLIC)
+router.get("/:id", userController.getUserById);
 
 // GET ALL USERS (ADMIN ONLY)
 router.get("/", auth, adminController.getAllUsers);

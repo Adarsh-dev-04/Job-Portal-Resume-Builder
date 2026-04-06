@@ -205,14 +205,20 @@ exports.getAllJobs = async (req, res) => {
       minSalary,
       type,
       workMode,
+      remote,
       status,
       category,
       experience,
+      employerId,
     } = req.query;
 
     let query = {
       approvalStatus: "approved",
     };
+
+    if (employerId) {
+      query.employerId = employerId;
+    }
 
     if (title) {
       query.title = { $regex: title, $options: "i" };
@@ -226,8 +232,11 @@ exports.getAllJobs = async (req, res) => {
       query.type = type;
     }
 
+  // Handle work mode filter (prioritize workMode, fall back to remote for backward compatibility)
     if (workMode) {
       query.workMode = workMode;
+    } else if (remote === "true") {
+      query.workMode = "Remote";
     }
 
     if (status) {

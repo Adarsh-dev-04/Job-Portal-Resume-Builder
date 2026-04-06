@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/companies" element={<Companies />} />
 
         {/* Company Profile View (Public) */}
-        <Route path="/company-profile/:companyName" element={<CompanyProfileView />} />
+        <Route path="/company-profile/:companyId" element={<CompanyProfileView />} />
 
         {/* Candidate Dashboard */}
         <Route

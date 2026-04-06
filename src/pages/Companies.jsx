@@ -12,23 +12,21 @@ import {
 } from "react-icons/lu";
 
 export default function Companies() {
-  const [jobs, setJobs] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    loadAllJobs();
+    loadCompanies();
   }, []);
 
-  async function loadAllJobs() {
+  async function loadCompanies() {
     setLoading(true);
     setPageError("");
 
     try {
-      const url = `${API_BASE}/api/jobs`;
-
-      const res = await fetch(url);
+      const res = await fetch(`${API_BASE}/api/users/companies`);
 
       let data;
       try {
@@ -39,52 +37,41 @@ export default function Companies() {
 
       if (!res.ok) {
         setPageError(data?.message || "Failed to load companies");
-        setJobs([]);
+        setCompanies([]);
         return;
       }
 
-      setJobs(Array.isArray(data) ? data : []);
+      setCompanies(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to load jobs:", err);
+      console.error("Failed to load companies:", err);
       setPageError("Failed to load companies");
-      setJobs([]);
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
   }
 
-  // Get unique companies and their job counts
-  const companies = useMemo(() => {
-    const companyMap = new Map();
-
-    jobs.forEach((job) => {
-      if (job.company) {
-        if (!companyMap.has(job.company)) {
-          companyMap.set(job.company, {
-            name: job.company,
-            jobCount: 1,
-            latestJob: job,
-          });
-        } else {
-          const company = companyMap.get(job.company);
-          company.jobCount += 1;
-        }
-      }
-    });
-
-    let companiesArray = Array.from(companyMap.values());
+  // Get filtered companies with job counts
+  const filteredCompanies = useMemo(() => {
+    let companiesArray = [...companies];
 
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       companiesArray = companiesArray.filter((company) =>
-        company.name.toLowerCase().includes(query)
+        (company.companyName || company.name || "").toLowerCase().includes(query) ||
+        (company.industry || "").toLowerCase().includes(query) ||
+        (company.companyCity || "").toLowerCase().includes(query)
       );
     }
 
-    // Sort by job count (descending)
-    return companiesArray.sort((a, b) => b.jobCount - a.jobCount);
-  }, [jobs, searchQuery]);
+    // Sort alphabetically by company name
+    return companiesArray.sort((a, b) => {
+      const nameA = a.companyName || a.name || "";
+      const nameB = b.companyName || b.name || "";
+      return nameA.localeCompare(nameB);
+    });
+  }, [companies, searchQuery]);
 
   function handleSearch(e) {
     setSearchQuery(e.target.value);
@@ -97,7 +84,7 @@ export default function Companies() {
         <div className="mb-8">
           <h1 className="text-4xl font-black text-stone-900">Companies</h1>
           <p className="mt-2 text-stone-600">
-            Browse {companies.length} hiring companies and their job openings
+            Browse {filteredCompanies.length} companies in our network
           </p>
         </div>
 
@@ -138,7 +125,7 @@ export default function Companies() {
                 <h2 className="text-xl font-bold text-stone-900">Unable to load companies</h2>
                 <p className="mt-2 text-sm text-stone-600">{pageError}</p>
                 <button
-                  onClick={loadAllJobs}
+                  onClick={loadCompanies}
                   className="mt-4 flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
                 >
                   <LuRefreshCw size={16} />
@@ -150,29 +137,29 @@ export default function Companies() {
         )}
 
         {/* No companies found */}
-        {!loading && !pageError && companies.length === 0 && (
+        {!loading && !pageError && filteredCompanies.length === 0 && (
           <div className="rounded-3xl border border-stone-200 bg-white p-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-stone-100">
               <LuBuilding2 className="text-stone-400" size={28} />
             </div>
             <h2 className="text-xl font-bold text-stone-900">
-              {searchQuery ? "No companies found" : "No companies hiring"}
+              {searchQuery ? "No companies found" : "No companies registered"}
             </h2>
             <p className="mt-2 text-stone-600">
               {searchQuery
                 ? "Try adjusting your search terms"
-                : "Check back later for new opportunities"}
+                : "No companies have registered yet"}
             </p>
           </div>
         )}
 
         {/* Companies Grid */}
-        {!loading && !pageError && companies.length > 0 && (
+        {!loading && !pageError && filteredCompanies.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {companies.map((company) => (
+            {filteredCompanies.map((company) => (
               <Link
-                key={company.name}
-                to={`/company-profile/${encodeURIComponent(company.name)}`}
+                key={company._id}
+                to={`/company-profile/${company._id}`}
                 className="group overflow-hidden rounded-2xl border border-stone-200 bg-white transition hover:border-orange-200 hover:shadow-lg"
               >
                 <div className="p-6">
@@ -181,29 +168,44 @@ export default function Companies() {
                     <div className="rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 p-3 text-white">
                       <LuBuilding2 size={24} />
                     </div>
-                    <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-                      {company.jobCount} {company.jobCount === 1 ? "job" : "jobs"}
-                    </span>
+                    {company.industry && (
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+                        {company.industry}
+                      </span>
+                    )}
                   </div>
 
                   {/* Company name */}
                   <h3 className="line-clamp-2 text-lg font-bold text-stone-900 transition group-hover:text-orange-600">
-                    {company.name}
+                    {company.companyName || company.name}
                   </h3>
 
-                  {/* Latest job snippet */}
-                  {company.latestJob && (
+                  {/* Company details */}
+                  <div className="mt-2 space-y-1">
+                    {company.companyCity && (
+                      <p className="text-sm text-stone-600">
+                        📍 {company.companyCity}
+                      </p>
+                    )}
+                    {company.companySize && (
+                      <p className="text-sm text-stone-600">
+                        👥 {company.companySize} employees
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Company description */}
+                  {company.companyDescription && (
                     <div className="mt-4 border-t border-stone-100 pt-4">
-                      <p className="text-xs font-semibold text-stone-500">Latest opening:</p>
-                      <p className="mt-1 line-clamp-1 text-sm font-medium text-stone-700">
-                        {company.latestJob.title}
+                      <p className="line-clamp-2 text-sm text-stone-600">
+                        {company.companyDescription}
                       </p>
                     </div>
                   )}
 
                   {/* View button */}
                   <div className="mt-4 flex items-center justify-between pt-4 opacity-0 transition group-hover:opacity-100">
-                    <span className="text-xs font-semibold text-orange-600">View all jobs</span>
+                    <span className="text-xs font-semibold text-orange-600">View profile</span>
                     <LuChevronRight className="text-orange-600" size={16} />
                   </div>
                 </div>
