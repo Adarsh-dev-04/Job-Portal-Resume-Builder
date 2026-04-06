@@ -41,6 +41,7 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/resume", resumeRoutes);
+app.use("/api/resumes", resumeRoutes); // Alias for plural endpoint
 app.use("/api/users", userRoutes);
 app.get("/api/companies/:employerId", userController.getCompany);
 
