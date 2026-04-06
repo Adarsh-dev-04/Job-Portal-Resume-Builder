@@ -16,6 +16,7 @@ app.use(
   cors({
     origin: [
       "https://job-portal-resume-builder.vercel.app",
+      "https://resume-builder-lilac-two.vercel.app",
       "http://localhost:5173",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
