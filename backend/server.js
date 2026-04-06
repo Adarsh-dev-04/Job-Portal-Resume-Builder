@@ -21,8 +21,6 @@ app.use(
   }),
 );
 
-app.options("*", cors({ origin: true, credentials: true }));
-
 app.use(express.json());
 
 mongoose
