@@ -347,7 +347,7 @@ const JobDetails = () => {
                         <div className="flex items-center gap-2">
                           <LuBuilding2 className="text-stone-400" />
                           <Link
-                            to={`/company-profile/${encodeURIComponent(jobInfo.company)}`}
+                            to={`/company-profile/${encodeURIComponent(jobInfo.employerId)}`}
                             className="font-medium transition hover:text-orange-600 hover:underline"
                           >
                             {jobInfo.company}
