@@ -14,11 +14,19 @@ const app = express();
 
 app.use(
   cors({
-    origin: [
-      "https://job-portal-resume-builder.vercel.app",
-      "https://resume-builder-lilac-two.vercel.app",
-      "http://localhost:5173",
-    ],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "https://job-portal-resume-builder.vercel.app",
+        "https://resume-builder-lilac-two.vercel.app",
+        "http://localhost:5173",
+      ];
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
