@@ -4,6 +4,7 @@ import { IoMdListBox } from "react-icons/io";
 import { FaUser } from "react-icons/fa6";
 import { IoMdTime } from "react-icons/io";
 import { FaRegCheckCircle } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function EmployerDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -161,9 +162,9 @@ export default function EmployerDashboard() {
                   {applicantions[job._id] || 0}
                 </td>
                 <td className="text-left text-sm text-gray-500 p-4 pr-0 flex justify-center gap-2">
-                  <a className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-blue-200 hover:text-blue-700 hover:border-blue-300" href={`/employer-dashboard/applicants/${job._id}`}>
+                  <Link className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-blue-200 hover:text-blue-700 hover:border-blue-300" to={`/employer-dashboard/applicants/${job._id}`}>
                     View
-                  </a>
+                  </Link>
                   <button className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-red-200 hover:text-red-700 hover:border-red-300">
                     Close
                   </button>
