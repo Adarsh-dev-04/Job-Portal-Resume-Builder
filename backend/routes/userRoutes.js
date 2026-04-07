@@ -17,6 +17,9 @@ router.get("/profile", auth, userController.getProfile);
 // UPDATE USER PROFILE
 router.put("/profile", auth, userController.updateProfile);
 
+// DELETE ACCOUNT and all resumes
+router.delete("/deleteAccount", auth, userController.deleteAccount);
+
 // GET COMPANY PROFILE
 router.get("/company", auth, userController.getCompany);
 

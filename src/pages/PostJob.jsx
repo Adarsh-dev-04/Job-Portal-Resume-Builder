@@ -965,17 +965,7 @@ export default function PostJob() {
               </div>
 
               <div className="space-y-5 p-5">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <div className="flex items-start gap-3">
-                    <LuInfo className="mt-0.5 shrink-0 text-amber-600" />
-                    <p className="text-sm text-amber-800">
-                      <span className="font-bold">V2 compatibility fix:</span> this
-                      version sends both <code className="font-semibold">requirements</code>{" "}
-                      (array) and <code className="font-semibold">skillsRequired</code>{" "}
-                      (string) so your backend stays compatible even if it’s inconsistent.
-                    </p>
-                  </div>
-                </div>
+                
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-stone-700">

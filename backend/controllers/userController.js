@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Resume = require("../models/resume");
+const Application = require("../models/Application");
 const bcrypt = require("bcryptjs");
 
 /* ================= GET CURRENT USER PROFILE ================= */
@@ -58,7 +59,46 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-/* ================= DELETE CURRENT USER ACCOUNT ================= */
+/* ================= DELETE ACCOUNT BY USER ================= */
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { password } = req.body;
+
+    // Password is required for account deletion (security verification)
+    if (!password) {
+      return res.status(400).json({ message: "Password is required to delete account" });
+    }
+
+    // Get the current user with password field
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // Delete all user's resumes first
+    await Resume.deleteMany({ userId });
+
+    // Delete all user's applications
+    await Application.deleteMany({ userId , status: "pending" });
+
+    // Delete the user account
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: "Account and all resumes deleted" });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
+};
+
+/* ================= DELETE CURRENT USER ACCOUNT BY ADMIN ================= */
 exports.deleteProfile = async (req, res) => {
   try {
     const userId = req.userId;

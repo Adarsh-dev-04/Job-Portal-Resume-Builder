@@ -11,6 +11,10 @@ import {
   LuBadgeCheck,
   LuTriangleAlert,
   LuLoaderCircle,
+  LuLock,
+  LuCheck,
+  LuX,
+  LuPencil,
 } from "react-icons/lu";
 
 export default function ProfilePage() {
@@ -30,10 +34,21 @@ export default function ProfilePage() {
     preferredLocations: "",
   });
 
+  const [originalForm, setOriginalForm] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // View/Edit mode
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Password modal
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordAction, setPasswordAction] = useState(null); // "save" | "delete"
 
   const jobTypeOptions = ["Full-Time", "Part-Time", "Internship", "Contract", "Freelance"];
   const workModeOptions = ["On-site", "Remote", "Hybrid"];
@@ -66,7 +81,7 @@ export default function ProfilePage() {
         return;
       }
 
-      setForm({
+      const profileData = {
         name: data.name || "",
         email: data.email || "",
         phone: data.phone || "",
@@ -77,7 +92,10 @@ export default function ProfilePage() {
         preferredJobTypes: Array.isArray(data.preferredJobTypes) ? data.preferredJobTypes : [],
         preferredWorkModes: Array.isArray(data.preferredWorkModes) ? data.preferredWorkModes : [],
         preferredLocations: data.preferredLocations || "",
-      });
+      };
+
+      setForm(profileData);
+      setOriginalForm(profileData);
     } catch (error) {
       console.error(error);
       showToast("Failed to load profile", "error");
@@ -87,10 +105,13 @@ export default function ProfilePage() {
   }
 
   function handleChange(e) {
+    if (!isEditMode) return;
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   function toggleArrayField(field, value) {
+    if (!isEditMode) return;
+
     setForm((prev) => {
       const current = prev[field] || [];
       const exists = current.includes(value);
@@ -118,78 +139,137 @@ export default function ProfilePage() {
     return Math.round((done / checks.length) * 100);
   }, [form]);
 
-  async function handleSave(e) {
-    e.preventDefault();
-    setSaving(true);
+  function openSaveModal() {
+    if (!form.name.trim()) {
+      showToast("Name is required", "error");
+      return;
+    }
+
+    setPasswordAction("save");
+    setPasswordInput("");
+    setShowPasswordModal(true);
+  }
+
+  function openDeleteModal() {
+    setPasswordAction("delete");
+    setPasswordInput("");
+    setShowPasswordModal(true);
+  }
+
+  async function confirmPasswordAction(password) {
+    if (!password.trim()) {
+      showToast("Password is required", "error");
+      return;
+    }
+
+    setPasswordLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
+      if (passwordAction === "save") {
+        setSaving(true);
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
+        const res = await fetch(`${API_BASE}/api/users/me`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...form,
+            password,
+          }),
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+
+        if (!res.ok) {
+          showToast(data?.message || "Failed to update profile", "error");
+          return;
+        }
+
+        const updatedForm = {
+          ...form,
+        };
+
+        setOriginalForm(updatedForm);
+        localStorage.setItem("name", data.user?.name || form.name);
+        showToast(data?.message || "Profile updated successfully!", "success");
+
+        setIsEditMode(false);
+        setShowPasswordModal(false);
+        setPasswordInput("");
       }
 
-      if (!res.ok) {
-        showToast(data?.message || "Failed to update profile", "error");
-        return;
-      }
+      if (passwordAction === "delete") {
+        setDeleting(true);
 
-      localStorage.setItem("name", data.user?.name || form.name);
-      showToast("Profile updated successfully!", "success");
+        const res = await fetch(`${API_BASE}/api/users/deleteAccount`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ password }),
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+
+        if (!res.ok) {
+          showToast(data?.message || "Failed to delete account", "error");
+          return;
+        }
+
+        localStorage.clear();
+        window.location.href = "/";
+      }
     } catch (error) {
       console.error(error);
-      showToast("Failed to update profile", "error");
+      showToast(
+        passwordAction === "save" ? "Failed to update profile" : "Failed to delete account",
+        "error"
+      );
     } finally {
+      setPasswordLoading(false);
       setSaving(false);
+      setDeleting(false);
     }
   }
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      "Are you sure you want to permanently delete your account?"
-    );
-    if (!confirmed) return;
-
-    setDeleting(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      if (!res.ok) {
-        showToast(data?.message || "Failed to delete account", "error");
-        return;
-      }
-
-      localStorage.clear();
-      window.location.href = "/";
-    } catch (error) {
-      console.error(error);
-      showToast("Failed to delete account", "error");
-    } finally {
-      setDeleting(false);
+  function handleCancelEdit() {
+    if (originalForm) {
+      setForm(originalForm);
     }
+    setIsEditMode(false);
+  }
+
+  function getInputClass(disabled = false) {
+    if (disabled) {
+      return "w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-500";
+    }
+
+    return `w-full rounded-2xl border px-4 py-3 text-sm outline-none transition ${
+      isEditMode
+        ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+        : "border-stone-200 bg-white text-stone-700"
+    }`;
+  }
+
+  function getFieldClassWithIcon() {
+    return `w-full rounded-2xl border bg-white px-4 py-3 pl-11 text-sm outline-none transition ${
+      isEditMode
+        ? "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+        : "border-stone-200 text-stone-700"
+    }`;
   }
 
   if (role === "employer") {
@@ -207,7 +287,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-100 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-stone-100">
         <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm">
           <LuLoaderCircle className="animate-spin text-orange-500" />
           <span className="text-sm font-semibold text-stone-700">Loading profile...</span>
@@ -236,6 +316,28 @@ export default function ProfilePage() {
       )}
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-stone-900">My Profile</h1>
+            <p className="mt-2 text-sm text-stone-500">
+              {isEditMode
+                ? "Edit your personal details and job preferences"
+                : "View your personal details and job preferences"}
+            </p>
+          </div>
+
+          {!isEditMode && (
+            <button
+              onClick={() => setIsEditMode(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600"
+            >
+              <LuPencil size={18} />
+              Edit Profile
+            </button>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
           {/* Sidebar */}
           <aside className="space-y-6">
@@ -270,8 +372,8 @@ export default function ProfilePage() {
                 Deleting your account may remove your profile, resumes, and application history.
               </p>
               <button
-                onClick={handleDelete}
-                disabled={deleting}
+                onClick={openDeleteModal}
+                disabled={deleting || passwordLoading}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-70"
               >
                 <LuTrash2 size={16} />
@@ -281,22 +383,52 @@ export default function ProfilePage() {
           </aside>
 
           {/* Main */}
-          <form
-            onSubmit={handleSave}
-            className="space-y-6 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8"
-          >
-            <div>
-              <h1 className="text-3xl font-black text-stone-900">My Profile</h1>
-              <p className="mt-2 text-sm text-stone-500">
-                Update your personal details, preferences, and complete missing information.
-              </p>
-            </div>
-
+          <div className="space-y-6 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="Full Name" icon={<LuUser />} name="name" value={form.name} onChange={handleChange} />
-              <Field label="Email" icon={<LuMail />} name="email" value={form.email} onChange={handleChange} />
-              <Field label="Phone" icon={<LuPhone />} name="phone" value={form.phone} onChange={handleChange} />
-              <Field label="City" icon={<LuMapPin />} name="city" value={form.city} onChange={handleChange} />
+              <Field
+                label="Full Name"
+                icon={<LuUser />}
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Your full name"
+                isEditMode={isEditMode}
+              />
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-stone-700">Email</label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
+                    <LuMail />
+                  </div>
+                  <input
+                    value={form.email}
+                    disabled
+                    className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 pl-11 text-sm text-stone-500"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-stone-500">Email cannot be changed</p>
+              </div>
+
+              <Field
+                label="Phone"
+                icon={<LuPhone />}
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="Your phone number"
+                isEditMode={isEditMode}
+              />
+
+              <Field
+                label="City"
+                icon={<LuMapPin />}
+                name="city"
+                value={form.city}
+                onChange={handleChange}
+                placeholder="Your city"
+                isEditMode={isEditMode}
+              />
             </div>
 
             <Field
@@ -306,6 +438,7 @@ export default function ProfilePage() {
               value={form.headline}
               onChange={handleChange}
               placeholder="e.g. Frontend Developer | React Enthusiast"
+              isEditMode={isEditMode}
             />
 
             <div>
@@ -314,7 +447,8 @@ export default function ProfilePage() {
                 name="experience"
                 value={form.experience}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                disabled={!isEditMode}
+                className={getInputClass(!isEditMode)}
               >
                 <option value="fresher">Fresher</option>
                 <option value="1-3">1–3 yrs</option>
@@ -329,9 +463,14 @@ export default function ProfilePage() {
                 name="bio"
                 value={form.bio}
                 onChange={handleChange}
+                readOnly={!isEditMode}
                 rows="5"
                 placeholder="Write a short summary about yourself..."
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition ${
+                  isEditMode
+                    ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    : "border-stone-200 bg-white text-stone-700"
+                }`}
               />
             </div>
 
@@ -340,6 +479,7 @@ export default function ProfilePage() {
               options={jobTypeOptions}
               values={form.preferredJobTypes}
               onToggle={(value) => toggleArrayField("preferredJobTypes", value)}
+              isEditMode={isEditMode}
             />
 
             <PreferenceGroup
@@ -347,6 +487,7 @@ export default function ProfilePage() {
               options={workModeOptions}
               values={form.preferredWorkModes}
               onToggle={(value) => toggleArrayField("preferredWorkModes", value)}
+              isEditMode={isEditMode}
             />
 
             <div>
@@ -357,27 +498,147 @@ export default function ProfilePage() {
                 name="preferredLocations"
                 value={form.preferredLocations}
                 onChange={handleChange}
+                readOnly={!isEditMode}
                 placeholder="e.g. Bengaluru, Remote, Hyderabad"
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition ${
+                  isEditMode
+                    ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    : "border-stone-200 bg-white text-stone-700"
+                }`}
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 py-3.5 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-70"
-            >
-              <LuSave size={18} />
-              {saving ? "Saving..." : "Save Profile"}
-            </button>
-          </form>
+            {/* Action Buttons only in edit mode */}
+            {isEditMode && (
+              <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-stone-50 px-6 py-5">
+                <p className="text-sm text-stone-600">
+                  Make sure all information is accurate before saving.
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openSaveModal}
+                    disabled={saving || passwordLoading}
+                    className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
+                  >
+                    {saving ? (
+                      <>
+                        <LuLoaderCircle className="animate-spin" size={18} />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <LuSave size={18} />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Password Confirmation Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+            <div className="mb-6 flex items-center gap-3">
+              <div
+                className={`rounded-full p-3 ${
+                  passwordAction === "delete"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-orange-100 text-orange-600"
+                }`}
+              >
+                <LuLock size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-stone-900">Confirm Password</h3>
+                <p className="text-sm text-stone-500">
+                  {passwordAction === "delete"
+                    ? "Enter your password to permanently delete your account"
+                    : "Enter your password to save changes"}
+                </p>
+              </div>
+            </div>
+
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && confirmPasswordAction(passwordInput)
+              }
+              placeholder="Enter your password"
+              className="mb-6 w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              autoFocus
+            />
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordInput("");
+                  setPasswordAction(null);
+                }}
+                disabled={passwordLoading}
+                className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <LuX className="mr-2 inline" size={16} />
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmPasswordAction(passwordInput)}
+                disabled={passwordLoading || !passwordInput.trim()}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-stone-300 ${
+                  passwordAction === "delete"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-orange-500 hover:bg-orange-600"
+                }`}
+              >
+                {passwordLoading ? (
+                  <>
+                    <LuLoaderCircle className="animate-spin" size={16} />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <LuCheck size={16} />
+                    {passwordAction === "delete" ? "Delete Account" : "Confirm"}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function Field({ label, icon, name, value, onChange, placeholder = "" }) {
+function Field({
+  label,
+  icon,
+  name,
+  value,
+  onChange,
+  placeholder = "",
+  isEditMode = false,
+}) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold text-stone-700">{label}</label>
@@ -389,15 +650,20 @@ function Field({ label, icon, name, value, onChange, placeholder = "" }) {
           name={name}
           value={value}
           onChange={onChange}
+          readOnly={!isEditMode}
           placeholder={placeholder}
-          className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 pl-11 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+          className={`w-full rounded-2xl border px-4 py-3 pl-11 text-sm outline-none transition ${
+            isEditMode
+              ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              : "border-stone-200 bg-white text-stone-700"
+          }`}
         />
       </div>
     </div>
   );
 }
 
-function PreferenceGroup({ title, options, values, onToggle }) {
+function PreferenceGroup({ title, options, values, onToggle, isEditMode = false }) {
   return (
     <div>
       <label className="mb-3 block text-sm font-semibold text-stone-700">{title}</label>
@@ -412,8 +678,8 @@ function PreferenceGroup({ title, options, values, onToggle }) {
               className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                 active
                   ? "border-orange-300 bg-orange-50 text-orange-700"
-                  : "border-stone-200 bg-white text-stone-600 hover:border-orange-200"
-              }`}
+                  : "border-stone-200 bg-white text-stone-600"
+              } ${isEditMode ? "hover:border-orange-200 cursor-pointer" : "cursor-default"}`}
             >
               {option}
             </button>

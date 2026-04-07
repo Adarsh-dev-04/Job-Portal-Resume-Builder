@@ -107,20 +107,4 @@ exports.deleteResume = async (req, res) => {
   }
 };
 
-/* ================= DELETE ACCOUNT ================= */
-exports.deleteAccount = async (req, res) => {
-  try {
-    const userId = req.userId;
 
-    // Delete all user's resumes first
-    await Resume.deleteMany({ userId });
-
-    // Delete the user account
-    await User.findByIdAndDelete(userId);
-
-    res.json({ message: "Account and all resumes deleted" });
-  } catch (err) {
-    console.error("Delete account error:", err);
-    res.status(500).json({ message: "Delete failed" });
-  }
-};
