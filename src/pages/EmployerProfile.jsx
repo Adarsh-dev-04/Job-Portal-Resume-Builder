@@ -336,30 +336,32 @@ export default function EmployerProfile() {
   function getInputClass() {
     return `mt-2 w-full rounded-xl border px-4 py-2 text-sm outline-none transition ${
       isEditMode
-        ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
-        : "border-stone-200 bg-white cursor-default"
+        ? "border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
+        : "border-stone-200 bg-white text-stone-700 cursor-default dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200"
     }`;
   }
 
   function getSelectClass() {
     return `mt-2 w-full rounded-xl border px-4 py-2 text-sm outline-none transition ${
       isEditMode
-        ? "border-stone-200 bg-white focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
-        : "border-stone-200 bg-white cursor-default"
+        ? "border-stone-200 bg-white text-stone-900 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
+        : "border-stone-200 bg-white text-stone-700 cursor-default dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200"
     }`;
   }
 
   if (role !== "employer") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-100">
-        <div className="rounded-3xl border border-red-200 bg-white p-8">
+      <div className="flex min-h-screen items-center justify-center bg-stone-100 px-4 dark:bg-stone-950">
+        <div className="rounded-3xl border border-red-200 bg-white p-8 dark:border-red-900/50 dark:bg-stone-900">
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-red-50 p-3 text-red-600">
+            <div className="rounded-2xl bg-red-50 p-3 text-red-600 dark:bg-red-500/10 dark:text-red-300">
               <LuTriangleAlert size={22} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-stone-900">Access Denied</h2>
-              <p className="mt-2 text-sm text-stone-600">Only employers can access this page</p>
+              <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50">Access Denied</h2>
+              <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
+                Only employers can access this page
+              </p>
             </div>
           </div>
         </div>
@@ -368,13 +370,13 @@ export default function EmployerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-100">
+    <div className="min-h-screen bg-stone-100 dark:bg-stone-950">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-stone-900">Company Profile</h1>
-            <p className="mt-2 text-stone-600">
+            <h1 className="text-3xl font-black text-stone-900 dark:text-stone-50">Company Profile</h1>
+            <p className="mt-2 text-stone-600 dark:text-stone-300">
               {isEditMode
                 ? "Edit your company information and hiring preferences"
                 : "Manage your company information and hiring preferences"}
@@ -394,9 +396,11 @@ export default function EmployerProfile() {
         {/* Loading */}
         {loading && (
           <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm">
+            <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <LuLoaderCircle className="animate-spin text-orange-500" size={20} />
-              <span className="text-sm font-semibold text-stone-700">Loading profile...</span>
+              <span className="text-sm font-semibold text-stone-700 dark:text-stone-200">
+                Loading profile...
+              </span>
             </div>
           </div>
         )}
@@ -405,25 +409,27 @@ export default function EmployerProfile() {
         {!loading && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="space-y-6">
-              <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-orange-500 text-2xl font-black text-white">
                     {(form.companyName || form.name || "C").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-stone-900">
+                    <h2 className="text-lg font-black text-stone-900 dark:text-stone-50">
                       {form.companyName || "Company"}
                     </h2>
-                    <p className="text-sm text-stone-500">Employer Account</p>
+                    <p className="text-sm text-stone-500 dark:text-stone-400">Employer Account</p>
                   </div>
                 </div>
 
                 <div className="mt-6">
                   <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-stone-700">Profile Completion</span>
+                    <span className="font-semibold text-stone-700 dark:text-stone-200">
+                      Profile Completion
+                    </span>
                     <span className="font-bold text-orange-600">{completion}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+                  <div className="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
                     <div
                       className="h-full rounded-full bg-orange-500"
                       style={{ width: `${completion}%` }}
@@ -433,14 +439,16 @@ export default function EmployerProfile() {
               </div>
 
               {/* Contact Information */}
-              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                  <h2 className="text-xl font-bold text-stone-900">Contact Information</h2>
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6 dark:border-stone-800 dark:from-stone-900 dark:to-stone-900">
+                  <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50">
+                    Contact Information
+                  </h2>
                 </div>
 
                 <div className="space-y-5 p-8">
                   <div>
-                    <label className="block text-sm font-semibold text-stone-700">
+                    <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                       <LuUsers className="mb-1 inline" size={16} /> Your Name
                     </label>
                     <input
@@ -455,16 +463,16 @@ export default function EmployerProfile() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-stone-700">
+                    <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                       <LuMail className="mb-1 inline" size={16} /> Email
                     </label>
                     <input
                       type="email"
                       value={form.email}
                       disabled
-                      className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-500"
+                      className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400"
                     />
-                    <p className="mt-1 text-xs text-stone-500">
+                    <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                       Use Sign-in Credentials to update your email
                     </p>
                   </div>
@@ -472,13 +480,15 @@ export default function EmployerProfile() {
               </div>
 
               {/* Sign-in Credentials */}
-              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                  <h2 className="text-xl font-bold text-stone-900">Sign-in Credentials</h2>
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6 dark:border-stone-800 dark:from-stone-900 dark:to-stone-900">
+                  <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50">
+                    Sign-in Credentials
+                  </h2>
                 </div>
 
                 <div className="space-y-4 p-8">
-                  <p className="text-sm text-stone-600">
+                  <p className="text-sm text-stone-600 dark:text-stone-300">
                     Update your sign-in email or password. For security, your current password is required.
                   </p>
                   <button
@@ -488,7 +498,7 @@ export default function EmployerProfile() {
                       setCredentialMode({ email: false, password: false });
                       setShowCredentialModal(true);
                     }}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-800 transition hover:bg-stone-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-800 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800"
                   >
                     <LuLock size={16} />
                     Update credentials
@@ -496,15 +506,15 @@ export default function EmployerProfile() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-red-200 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-black text-stone-900">Account Management</h3>
-                <p className="mt-2 text-xs leading-6 text-stone-500">
+              <div className="rounded-3xl border border-red-200 bg-white p-5 shadow-sm dark:border-red-900/50 dark:bg-stone-900">
+                <h3 className="text-sm font-black text-stone-900 dark:text-stone-50">Account Management</h3>
+                <p className="mt-2 text-xs leading-6 text-stone-500 dark:text-stone-400">
                   Deleting your account will remove your company profile and job postings.
                 </p>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deleting || passwordLoading}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-70"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-70 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-500/10"
                 >
                   Delete Account
                 </button>
@@ -513,14 +523,14 @@ export default function EmployerProfile() {
 
             <div className="space-y-6">
               {/* Company Information */}
-              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                  <h2 className="text-xl font-bold text-stone-900">Company Information</h2>
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6 dark:border-stone-800 dark:from-stone-900 dark:to-stone-900">
+                  <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50">Company Information</h2>
                 </div>
 
                 <div className="space-y-5 p-8">
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700">
+                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                     <LuBuilding2 className="mb-1 inline" size={16} /> Company Name *
                   </label>
                   <input
@@ -535,7 +545,7 @@ export default function EmployerProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700">
+                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                     <LuGlobe className="mb-1 inline" size={16} /> Website
                   </label>
                   {isEditMode ? (
@@ -554,12 +564,12 @@ export default function EmployerProfile() {
                           href={form.companyWebsite.startsWith('http') ? form.companyWebsite : `https://${form.companyWebsite}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-orange-600 hover:text-orange-700 underline transition-colors"
+                          className="text-orange-600 underline transition-colors hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
                         >
                           {form.companyWebsite}
                         </a>
                       ) : (
-                        <span className="text-stone-400 italic">No website provided</span>
+                        <span className="text-stone-400 italic dark:text-stone-500">No website provided</span>
                       )}
                     </div>
                   )}
@@ -567,7 +577,7 @@ export default function EmployerProfile() {
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-stone-700">Industry</label>
+                    <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">Industry</label>
                     <input
                       type="text"
                       name="industry"
@@ -586,7 +596,7 @@ export default function EmployerProfile() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-stone-700">Company Size</label>
+                    <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">Company Size</label>
                     <select
                       name="companySize"
                       value={form.companySize}
@@ -603,7 +613,7 @@ export default function EmployerProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700">
+                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                     <LuMapPin className="mb-1 inline" size={16} /> City
                   </label>
                   <input
@@ -618,7 +628,7 @@ export default function EmployerProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700">Company Description</label>
+                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">Company Description</label>
                   <textarea
                     name="companyDescription"
                     value={form.companyDescription}
@@ -633,9 +643,9 @@ export default function EmployerProfile() {
             </div>
 
               {/* Hiring Preferences */}
-              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                  <h2 className="text-xl font-bold text-stone-900">Currently Hiring For</h2>
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6 dark:border-stone-800 dark:from-stone-900 dark:to-stone-900">
+                  <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50">Currently Hiring For</h2>
                 </div>
 
                 <div className="space-y-3 p-8">
@@ -645,17 +655,17 @@ export default function EmployerProfile() {
                         key={option}
                         className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
                           isEditMode
-                            ? "cursor-pointer border-stone-200 hover:border-orange-300 hover:bg-orange-50"
-                            : "cursor-default border-stone-200"
+                            ? "cursor-pointer border-stone-200 hover:border-orange-300 hover:bg-orange-50 dark:border-stone-800 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/10"
+                            : "cursor-default border-stone-200 dark:border-stone-800"
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={form.hiringFor.includes(option)}
                           onChange={() => toggleHiringFor(option)}
-                          className="h-4 w-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500"
+                          className="h-4 w-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500 dark:border-stone-600 dark:bg-stone-950"
                         />
-                        <span className="text-sm font-medium text-stone-700">
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">
                           {option}
                         </span>
                       </label>
@@ -666,9 +676,9 @@ export default function EmployerProfile() {
 
               {/* Save Button */}
               {isEditMode && (
-                <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm">
+                <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                   <div>
-                    <p className="text-sm text-stone-600">
+                    <p className="text-sm text-stone-600 dark:text-stone-300">
                       Make sure all information is accurate before saving
                     </p>
                   </div>
@@ -678,14 +688,14 @@ export default function EmployerProfile() {
                         setIsEditMode(false);
                         fetchProfile();
                       }}
-                      className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                      className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
+                      className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 dark:disabled:bg-stone-700"
                     >
                       {saving ? (
                         <>
@@ -706,14 +716,14 @@ export default function EmployerProfile() {
               {/* Password Confirmation Modal */}
               {showPasswordModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                  <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+                  <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg dark:border-stone-800 dark:bg-stone-900">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                      <div className="rounded-full bg-orange-100 p-3 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300">
                         <LuLock size={24} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-stone-900">Confirm Password</h3>
-                        <p className="text-sm text-stone-500">
+                        <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50">Confirm Password</h3>
+                        <p className="text-sm text-stone-500 dark:text-stone-400">
                           {passwordAction === "delete"
                             ? "Enter your password to delete your account"
                             : "Enter your password to save changes"}
@@ -727,7 +737,7 @@ export default function EmployerProfile() {
                       onChange={(e) => setPasswordInput(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && confirmPasswordAction(passwordInput)}
                       placeholder="Enter your password"
-                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 mb-6"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 mb-6 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
                       autoFocus
                     />
 
@@ -739,7 +749,7 @@ export default function EmployerProfile() {
                           setPasswordAction(null);
                         }}
                         disabled={passwordLoading}
-                        className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
                       >
                         <LuX className="inline mr-2" size={16} />
                         Cancel
@@ -747,7 +757,7 @@ export default function EmployerProfile() {
                       <button
                           onClick={() => confirmPasswordAction(passwordInput)}
                         disabled={passwordLoading || !passwordInput.trim()}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 disabled:cursor-not-allowed dark:disabled:bg-stone-700"
                       >
                         {passwordLoading ? (
                           <>
@@ -769,14 +779,14 @@ export default function EmployerProfile() {
               {/* Credentials Update Modal */}
               {showCredentialModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                  <div className="w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+                  <div className="w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-8 shadow-lg dark:border-stone-800 dark:bg-stone-900">
                     <div className="mb-6 flex items-start gap-3">
-                      <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                      <div className="rounded-full bg-orange-100 p-3 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300">
                         <LuLock size={24} />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-stone-900">Update credentials</h3>
-                        <p className="mt-1 text-sm text-stone-500">
+                        <h3 className="text-xl font-bold text-stone-900 dark:text-stone-50">Update credentials</h3>
+                        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
                           Current password is required to confirm changes.
                         </p>
                       </div>
@@ -784,7 +794,7 @@ export default function EmployerProfile() {
 
                     {credentialStep === "choose" ? (
                       <div className="space-y-5">
-                        <p className="text-sm text-stone-600">What would you like to change?</p>
+                        <p className="text-sm text-stone-600 dark:text-stone-300">What would you like to change?</p>
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <button
@@ -793,12 +803,12 @@ export default function EmployerProfile() {
                               setCredentialMode({ email: true, password: false });
                               setCredentialStep("form");
                             }}
-                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
                           >
-                            <div className="flex items-center gap-2 font-semibold text-stone-900">
+                            <div className="flex items-center gap-2 font-semibold text-stone-900 dark:text-stone-50">
                               <LuMail size={16} /> Change email
                             </div>
-                            <p className="mt-1 text-sm text-stone-500">Update the email used to sign in.</p>
+                            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">Update the email used to sign in.</p>
                           </button>
 
                           <button
@@ -807,12 +817,12 @@ export default function EmployerProfile() {
                               setCredentialMode({ email: false, password: true });
                               setCredentialStep("form");
                             }}
-                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
                           >
-                            <div className="flex items-center gap-2 font-semibold text-stone-900">
+                            <div className="flex items-center gap-2 font-semibold text-stone-900 dark:text-stone-50">
                               <LuLock size={16} /> Change password
                             </div>
-                            <p className="mt-1 text-sm text-stone-500">Set a new password for your account.</p>
+                            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">Set a new password for your account.</p>
                           </button>
                         </div>
 
@@ -829,7 +839,7 @@ export default function EmployerProfile() {
                               confirmPassword: "",
                             }));
                           }}
-                          className="w-full rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                          className="w-full rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
                         >
                           <LuX className="mr-2 inline" size={16} />
                           Close
@@ -839,7 +849,7 @@ export default function EmployerProfile() {
                       <form onSubmit={handleUpdateCredentials} className="space-y-5">
                         {credentialMode.email && (
                           <div>
-                            <label className="block text-sm font-semibold text-stone-700">
+                            <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                               <LuMail className="mb-1 inline" size={16} /> New email
                             </label>
                             <input
@@ -848,13 +858,13 @@ export default function EmployerProfile() {
                               value={credentialForm.email}
                               onChange={handleCredentialChange}
                               placeholder="Enter new email"
-                              className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                              className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
                             />
                           </div>
                         )}
 
                         <div>
-                          <label className="block text-sm font-semibold text-stone-700">
+                          <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
                             <LuLock className="mb-1 inline" size={16} /> Current password
                           </label>
                           <input
@@ -863,7 +873,7 @@ export default function EmployerProfile() {
                             value={credentialForm.currentPassword}
                             onChange={handleCredentialChange}
                             placeholder="Enter current password"
-                            className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                            className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
                             autoFocus
                           />
                         </div>
@@ -871,26 +881,26 @@ export default function EmployerProfile() {
                         {credentialMode.password && (
                           <>
                             <div>
-                              <label className="block text-sm font-semibold text-stone-700">New password</label>
+                              <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">New password</label>
                               <input
                                 type="password"
                                 name="newPassword"
                                 value={credentialForm.newPassword}
                                 onChange={handleCredentialChange}
                                 placeholder="Enter new password"
-                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
                               />
                             </div>
 
                             <div>
-                              <label className="block text-sm font-semibold text-stone-700">Confirm new password</label>
+                              <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">Confirm new password</label>
                               <input
                                 type="password"
                                 name="confirmPassword"
                                 value={credentialForm.confirmPassword}
                                 onChange={handleCredentialChange}
                                 placeholder="Re-enter new password"
-                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-orange-500 dark:focus:ring-orange-500/20"
                               />
                             </div>
                           </>
@@ -910,7 +920,7 @@ export default function EmployerProfile() {
                               }));
                             }}
                             disabled={credentialSaving}
-                            className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
                           >
                             Back
                           </button>

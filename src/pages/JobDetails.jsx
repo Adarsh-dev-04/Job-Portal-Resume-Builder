@@ -29,6 +29,8 @@ const JobDetails = () => {
   const [loadingJob, setLoadingJob] = React.useState(true);
   const [loadingResumes, setLoadingResumes] = React.useState(true);
   const [applyLoading, setApplyLoading] = React.useState(false);
+  const [reportReason, setReportReason] = React.useState("");
+  const [reportSubmitting, setReportSubmitting] = React.useState(false);
   const [pageError, setPageError] = React.useState("");
   const [toast, setToast] = React.useState(null);
 
@@ -255,6 +257,59 @@ const JobDetails = () => {
     }
   }
 
+  async function submitReport() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      showToast("Please login to report a job", "error");
+      return;
+    }
+
+    if (role !== "candidate") {
+      showToast("Only candidates can report jobs", "error");
+      return;
+    }
+
+    const reason = reportReason.trim();
+    if (!reason) {
+      showToast("Please write a reason", "error");
+      return;
+    }
+
+    try {
+      setReportSubmitting(true);
+
+      const res = await fetch(`${API_BASE}/api/jobs/${jobId}/report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { message: "Server returned an invalid response" };
+      }
+
+      if (!res.ok) {
+        showToast(data.message || "Failed to submit report", "error");
+        return;
+      }
+
+      setReportReason("");
+      showToast(data.message || "Report submitted", "success");
+    } catch (error) {
+      console.error("Report job error:", error);
+      showToast("Something went wrong while submitting report", "error");
+    } finally {
+      setReportSubmitting(false);
+    }
+  }
+
   const requirements = jobInfo ? getRequirements(jobInfo) : [];
   const benefits = jobInfo ? getBenefits(jobInfo) : [];
   const workMode = jobInfo ? getWorkMode(jobInfo) : "On-site";
@@ -320,7 +375,7 @@ const JobDetails = () => {
             <div className="space-y-6">
               {/* Hero Card */}
               <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 p-6">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 p-6 dark:border-stone-800 dark:from-stone-950 dark:to-stone-900">
                   <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -556,6 +611,48 @@ const JobDetails = () => {
                     )}
                   </div>
                 </section>
+
+                {/* Report job */}
+                {token && role === "candidate" && (
+                  <section className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-black text-stone-900">Report this job</h3>
+                        <p className="mt-1 text-sm text-stone-500">
+                          Tell us what looks wrong. Admin will review your report.
+                        </p>
+                      </div>
+                      <div className="shrink-0 rounded-2xl bg-red-50 p-3 text-red-600">
+                        <LuTriangleAlert size={18} />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <textarea
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        rows={4}
+                        maxLength={2000}
+                        placeholder="Write your reason (e.g., scam, misleading salary, harassment, inappropriate content...)"
+                        className="w-full resize-none rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      />
+
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-stone-500">
+                          {reportReason.trim().length}/2000
+                        </p>
+
+                        <button
+                          onClick={submitReport}
+                          disabled={reportSubmitting || !reportReason.trim()}
+                          className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {reportSubmitting ? "Submitting..." : "Submit report"}
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 {/* Quick facts */}
                 <section className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">

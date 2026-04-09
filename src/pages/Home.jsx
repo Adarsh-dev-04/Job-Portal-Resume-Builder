@@ -134,7 +134,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-100">
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-stone-200 bg-gradient-to-br from-orange-50 via-amber-50 to-white">
+      <section className="relative overflow-hidden border-b border-stone-200 bg-gradient-to-br from-orange-50 via-amber-50 to-white dark:border-stone-800 dark:from-stone-950 dark:via-stone-950 dark:to-stone-900">
         {/* Soft background accents */}
         <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-orange-200/30 blur-3xl" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-amber-200/20 blur-3xl" />
@@ -168,7 +168,7 @@ export default function Home() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       onKeyDown={handleSearchKeyDown}
-                      className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 pl-11 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 pl-11 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:text-stone-100 dark:placeholder:text-stone-500"
                     />
                   </div>
 
@@ -179,7 +179,7 @@ export default function Home() {
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       onKeyDown={handleSearchKeyDown}
-                      className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 pl-11 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 pl-11 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:text-stone-100 dark:placeholder:text-stone-500"
                     />
                   </div>
 
@@ -205,7 +205,7 @@ export default function Home() {
 
                 <Link
                   to="/resume"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700 transition hover:bg-orange-50"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-orange-300 bg-white px-5 py-3 text-sm font-bold text-orange-700 transition hover:bg-orange-50 dark:border-orange-400/60 dark:hover:bg-orange-500/10"
                 >
                   <LuFileText size={16} />
                   Build resume

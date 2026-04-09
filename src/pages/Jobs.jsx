@@ -16,6 +16,7 @@ import {
   LuHouse,
 } from "react-icons/lu";
 
+
 export default function Jobs() {
   const [searchParams] = useSearchParams();
 
@@ -227,10 +228,10 @@ export default function Jobs() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 p-6 sm:p-8">
+          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 p-6 sm:p-8 dark:from-stone-950 dark:via-stone-950 dark:to-stone-900">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-orange-700">
+                <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-orange-700 dark:border-orange-400/30 dark:bg-stone-900 dark:text-orange-300">
                   <LuBriefcase />
                   Explore Opportunities
                 </div>
@@ -392,7 +393,7 @@ export default function Jobs() {
 
                   <button
                     onClick={handleReset}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/10"
                   >
                     <LuRefreshCw size={16} />
                     Reset All
@@ -564,7 +565,7 @@ export default function Jobs() {
 
                           <Link
                             to={`/jobs/${job._id}`}
-                            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-stone-100 px-4 py-3 text-sm font-bold text-stone-800 transition hover:bg-orange-500 hover:text-white"
+                            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-stone-100 px-4 py-3 text-sm font-bold text-stone-800 transition hover:bg-orange-500 hover:text-white dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-orange-500 dark:hover:text-white"
                           >
                             View Details
                             <LuChevronRight size={16} />

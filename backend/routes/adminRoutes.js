@@ -65,4 +65,19 @@ router.get(
   adminController.getAllApplicationsAdmin
 );
 
+// Job Reports
+router.get(
+  "/reports",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getAllJobReportsAdmin
+);
+
+router.patch(
+  "/reports/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.updateJobReportByAdmin
+);
+
 module.exports = router;

@@ -25,6 +25,7 @@ const App = () => {
   const componentRef = useRef();
 
   const emptyResume = {
+    layout: "classic",
     name: "",
     email: "",
     phone: "",
@@ -53,6 +54,18 @@ const App = () => {
 
   const isLoggedIn = !!localStorage.getItem("token");
   const role = localStorage.getItem("role");
+
+  const selectedLayout =
+    typeof formData?.layout === "string" && formData.layout.trim()
+      ? formData.layout.trim().toLowerCase()
+      : "classic";
+
+  function setResumeLayout(layout) {
+    setFormData((prev) => ({
+      ...(prev || emptyResume),
+      layout,
+    }));
+  }
 
   /* ================= LOAD RESUMES ================= */
 
@@ -223,7 +236,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-stone-100">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur dark:border-stone-800 dark:bg-stone-950/80">
         <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             {/* Left */}
@@ -467,10 +480,43 @@ const App = () => {
           {/* Preview */}
           <div className="rounded-3xl border border-stone-200 bg-white shadow-sm">
             <div className="border-b border-stone-100 px-5 py-4">
-              <h3 className="text-lg font-black text-stone-900">Live Preview</h3>
-              <p className="text-sm text-stone-500">
-                See how your resume looks before downloading
-              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-stone-900">Live Preview</h3>
+                  <p className="text-sm text-stone-500">
+                    See how your resume looks before downloading
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                    Layout
+                  </span>
+                  <div className="inline-flex rounded-2xl border border-stone-200 bg-stone-50 p-1">
+                    {[
+                      { key: "classic", label: "Classic" },
+                      { key: "modern", label: "Modern" },
+                      { key: "minimal", label: "Minimal" },
+                    ].map((opt) => {
+                      const active = selectedLayout === opt.key;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setResumeLayout(opt.key)}
+                          className={`rounded-2xl px-3 py-2 text-xs font-bold transition sm:text-sm ${
+                            active
+                              ? "bg-orange-500 text-white"
+                              : "text-stone-700 hover:bg-white"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div

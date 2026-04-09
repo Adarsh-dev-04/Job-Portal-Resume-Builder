@@ -35,17 +35,20 @@ export default function AdminApplications() {
   }
 
   function badge(status) {
-    if (status === "pending") return "bg-yellow-100 text-yellow-700";
-    if (status === "accepted") return "bg-green-100 text-green-700";
-    if (status === "rejected") return "bg-red-100 text-red-700";
-    return "bg-stone-100 text-stone-700";
+    if (status === "pending")
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-200";
+    if (status === "accepted")
+      return "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-200";
+    if (status === "rejected")
+      return "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-200";
+    return "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200";
   }
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-        <h1 className="text-3xl font-black text-stone-900">Applications</h1>
-        <p className="mt-2 text-sm text-stone-500">
+      <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <h1 className="text-3xl font-black text-stone-900 dark:text-stone-50">Applications</h1>
+        <p className="mt-2 text-sm text-stone-500 dark:text-stone-300">
           Monitor platform-wide candidate applications.
         </p>
 
@@ -53,7 +56,7 @@ export default function AdminApplications() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-50 dark:focus:border-orange-400 dark:focus:ring-orange-500/20"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -67,31 +70,31 @@ export default function AdminApplications() {
         {applications.map((app) => (
           <div
             key={app._id}
-            className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm"
+            className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900"
           >
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <h2 className="text-xl font-black text-stone-900">
+                <h2 className="text-xl font-black text-stone-900 dark:text-stone-50">
                   {app.jobId?.title || "Deleted Job"}
                 </h2>
 
-                <p className="mt-2 text-sm text-stone-500">
+                <p className="mt-2 text-sm text-stone-500 dark:text-stone-300">
                   {app.jobId?.company} • {app.jobId?.location}
                 </p>
 
-                <p className="mt-2 text-sm text-stone-600">
+                <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
                   Applicant: <span className="font-semibold">{app.applicantId?.name || "Unknown"}</span>
                 </p>
 
-                <p className="text-sm text-stone-600">
+                <p className="text-sm text-stone-600 dark:text-stone-300">
                   Email: <span className="font-semibold">{app.applicantId?.email || "N/A"}</span>
                 </p>
 
-                <p className="text-sm text-stone-600">
+                <p className="text-sm text-stone-600 dark:text-stone-300">
                   Resume: <span className="font-semibold">{app.resumeId?.title || "Untitled Resume"}</span>
                 </p>
 
-                <p className="mt-2 text-xs text-stone-400">
+                <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">
                   Applied on: {new Date(app.createdAt).toLocaleDateString()}
                 </p>
               </div>
@@ -106,7 +109,7 @@ export default function AdminApplications() {
         ))}
 
         {applications.length === 0 && (
-          <div className="rounded-3xl border border-stone-200 bg-white p-10 text-center text-stone-500 shadow-sm">
+          <div className="rounded-3xl border border-stone-200 bg-white p-10 text-center text-stone-500 shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">
             No applications found.
           </div>
         )}

@@ -111,9 +111,6 @@ router.get("/job/:jobId", auth, async (req, res) => {
 // Employer can view a resume only if the applicant applied to one of their jobs
 router.get("/resume/:resumeId", auth, async (req, res) => {
   try {
-    const Resume = require("../models/resume");
-    const Job = require("../models/Job");
-
     const resume = await Resume.findById(req.params.resumeId);
     if (!resume) return res.status(404).json({ message: "Resume not found" });
 
@@ -129,9 +126,45 @@ router.get("/resume/:resumeId", auth, async (req, res) => {
       const application = await Application.findOne({
         resumeId: req.params.resumeId,
         jobId: { $in: employerJobIds.map((j) => j._id) },
-      });
+      })
+        .sort({ createdAt: -1 })
+        .populate("jobId", "title company location type workMode")
+        .populate("applicantId", "name email");
 
-      if (application) return res.json(resume);
+      if (application) {
+        const resumeObj = resume.toObject();
+
+        return res.json({
+          ...resumeObj,
+          context: {
+            application: {
+              id: application._id,
+              status: application.status,
+              createdAt: application.createdAt,
+              reviewedAt: application.reviewedAt,
+              employerNotes: application.employerNotes,
+            },
+            candidate: {
+              id: application.applicantId?._id || application.applicantId,
+              name:
+                application.applicantId?.name || application.candidateName || "Unknown Applicant",
+              email:
+                application.applicantId?.email || application.candidateEmail || "",
+              isActive: application.candidateIsActive,
+            },
+            job: application.jobId
+              ? {
+                  id: application.jobId._id,
+                  title: application.jobId.title,
+                  company: application.jobId.company,
+                  location: application.jobId.location,
+                  type: application.jobId.type,
+                  workMode: application.jobId.workMode,
+                }
+              : null,
+          },
+        });
+      }
     }
 
     // Otherwise: forbidden

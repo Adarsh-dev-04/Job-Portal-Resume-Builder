@@ -346,10 +346,10 @@ export default function PostJob() {
 
   function inputClass(field) {
     const hasError = errors[field];
-    return `w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition ${
+    return `w-full rounded-xl border bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500 ${
       hasError
-        ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-        : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+        ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100 dark:border-red-500/40 dark:focus:border-red-400 dark:focus:ring-red-500/20"
+        : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:focus:border-orange-400 dark:focus:ring-orange-500/20"
     }`;
   }
 
@@ -452,7 +452,7 @@ export default function PostJob() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-100">
+    <div className="min-h-screen bg-stone-100 dark:bg-stone-950">
       {/* TOASTS */}
       <div className="fixed right-4 top-4 z-[100] space-y-3">
         {toasts.map((toast) => (
@@ -460,10 +460,10 @@ export default function PostJob() {
             key={toast.id}
             className={`min-w-[260px] max-w-[360px] rounded-2xl border px-4 py-3 shadow-lg backdrop-blur-sm ${
               toast.type === "success"
-                ? "border-green-200 bg-white text-green-700"
+                ? "border-green-200 bg-white text-green-700 dark:border-green-500/30 dark:bg-stone-900 dark:text-green-200"
                 : toast.type === "error"
-                ? "border-red-200 bg-white text-red-700"
-                : "border-blue-200 bg-white text-blue-700"
+                ? "border-red-200 bg-white text-red-700 dark:border-red-500/30 dark:bg-stone-900 dark:text-red-200"
+                : "border-blue-200 bg-white text-blue-700 dark:border-blue-500/30 dark:bg-stone-900 dark:text-blue-200"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -484,7 +484,7 @@ export default function PostJob() {
 
       <form onSubmit={submitJob} className="pb-8">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur-md">
+        <div className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur-md dark:border-stone-800 dark:bg-stone-950/80">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -500,14 +500,14 @@ export default function PostJob() {
                 <button
                   type="button"
                   onClick={saveDraftManually}
-                  className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:text-orange-600"
+                  className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:text-orange-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-orange-500/40 dark:hover:text-orange-300"
                 >
                   Save draft
                 </button>
                 <button
                   type="button"
                   onClick={clearDraft}
-                  className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-red-200 hover:text-red-600"
+                  className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-red-200 hover:text-red-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-red-500/40 dark:hover:text-red-200"
                 >
                   Clear draft
                 </button>
@@ -588,7 +588,7 @@ export default function PostJob() {
           <div className="space-y-6">
             {/* Validation Summary */}
             {Object.keys(errors).length > 0 && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10">
                 <div className="flex items-start gap-3">
                   <LuTriangleAlert className="mt-0.5 shrink-0 text-red-600" />
                   <div>
@@ -654,7 +654,7 @@ export default function PostJob() {
                       value={job.company}
                       disabled
                       placeholder="e.g. Microsoft"
-                      className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none cursor-not-allowed text-stone-600"
+                      className="w-full cursor-not-allowed rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600 outline-none dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300"
                     />
                     <p className="mt-1 text-xs text-stone-500">
                       This is auto-filled from your employer profile
@@ -736,7 +736,7 @@ export default function PostJob() {
                       name="category"
                       value={job.category}
                       onChange={handleChange}
-                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:focus:ring-orange-500/20"
                     >
                       <option value="">Select category</option>
                       <option>Engineering</option>
@@ -759,7 +759,7 @@ export default function PostJob() {
                       name="experience"
                       value={job.experience}
                       onChange={handleChange}
-                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:focus:ring-orange-500/20"
                     >
                       <option value="">Select level</option>
                       <option>Fresher</option>
@@ -784,8 +784,8 @@ export default function PostJob() {
                         }
                         className={`rounded-2xl border p-4 text-left transition ${
                           job.workMode === mode
-                            ? "border-orange-300 bg-orange-50 ring-2 ring-orange-100"
-                            : "border-stone-200 bg-white hover:border-orange-200"
+                            ? "border-orange-300 bg-orange-50 ring-2 ring-orange-100 dark:border-orange-500/40 dark:bg-orange-500/10 dark:ring-orange-500/20"
+                            : "border-stone-200 bg-white hover:border-orange-200 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-orange-500/40"
                         }`}
                       >
                         <div className="text-lg">
@@ -878,7 +878,7 @@ export default function PostJob() {
                         value={job.salaryMin}
                         onChange={handleChange}
                         placeholder="e.g. 600000"
-                        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:ring-orange-500/20"
                       />
                     </div>
 
@@ -914,7 +914,7 @@ export default function PostJob() {
                         name="salaryPeriod"
                         value={job.salaryPeriod}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:focus:ring-orange-500/20"
                       >
                         <option value="monthly">Per month</option>
                         <option value="yearly">Per year</option>
@@ -984,10 +984,10 @@ export default function PostJob() {
                         }
                       }}
                       placeholder="Type a skill and press Enter..."
-                      className={`flex-1 rounded-xl border bg-white px-4 py-3 text-sm outline-none transition ${
+                      className={`flex-1 rounded-xl border bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500 ${
                         showFieldError("skills")
-                          ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                          : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                          ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100 dark:border-red-500/40 dark:focus:ring-red-500/20"
+                          : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:focus:ring-orange-500/20"
                       }`}
                     />
                     <button
@@ -1044,7 +1044,7 @@ export default function PostJob() {
                             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                               alreadyAdded
                                 ? "cursor-not-allowed border border-stone-200 bg-stone-100 text-stone-400"
-                                : "border border-dashed border-orange-300 text-orange-700 hover:bg-orange-50"
+                                : "border border-dashed border-orange-300 text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-500/10"
                             }`}
                           >
                             {skill}
@@ -1065,7 +1065,7 @@ export default function PostJob() {
                     onChange={handleChange}
                     rows={4}
                     placeholder="e.g. B.Tech preferred, strong communication skills, willingness to travel..."
-                    className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:ring-orange-500/20"
                   />
                 </div>
               </div>
@@ -1105,8 +1105,8 @@ export default function PostJob() {
                           onClick={() => toggleBenefit(benefit)}
                           className={`rounded-xl border p-3 text-left transition ${
                             active
-                              ? "border-orange-300 bg-orange-50"
-                              : "border-stone-200 bg-white hover:border-orange-200"
+                              ? "border-orange-300 bg-orange-50 dark:border-orange-500/40 dark:bg-orange-500/10"
+                              : "border-stone-200 bg-white hover:border-orange-200 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-orange-500/40"
                           }`}
                         >
                           <div className="text-sm font-semibold text-stone-800">
@@ -1179,8 +1179,8 @@ export default function PostJob() {
           <div className="space-y-6">
             {/* Live Preview */}
             <div className="sticky top-28 space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-orange-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-orange-200 bg-orange-50 px-4 py-3">
+              <div className="overflow-hidden rounded-2xl border border-orange-200 bg-white shadow-sm dark:border-orange-500/30 dark:bg-stone-900">
+                <div className="flex items-center justify-between border-b border-orange-200 bg-orange-50 px-4 py-3 dark:border-orange-500/30 dark:bg-orange-500/10">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     <span className="text-sm font-bold text-orange-700">
@@ -1206,10 +1206,10 @@ export default function PostJob() {
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
                       {job.type}
                     </span>
-                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-200">
                       {job.workMode}
                     </span>
                   </div>
@@ -1260,7 +1260,7 @@ export default function PostJob() {
                         skills.map((skill) => (
                           <span
                             key={skill}
-                            className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700"
+                            className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700 dark:bg-orange-500/10 dark:text-orange-200"
                           >
                             {skill}
                           </span>
@@ -1274,7 +1274,7 @@ export default function PostJob() {
               </div>
 
               {/* Completion */}
-              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                 <h3 className="text-sm font-bold text-stone-900">Listing completeness</h3>
 
                 <div className="mt-3 flex items-center gap-3">
@@ -1311,8 +1311,8 @@ export default function PostJob() {
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded-md border text-[10px] ${
                           done
-                            ? "border-green-200 bg-green-50 text-green-600"
-                            : "border-stone-200 bg-stone-50 text-transparent"
+                            ? "border-green-200 bg-green-50 text-green-600 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-200"
+                            : "border-stone-200 bg-stone-50 text-transparent dark:border-stone-800 dark:bg-stone-950"
                         }`}
                       >
                         ✓
@@ -1330,7 +1330,7 @@ export default function PostJob() {
               </div>
 
               {/* Tips */}
-              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
                 <div className="flex items-center gap-2 text-sm font-bold text-stone-900">
                   <LuSparkles className="text-orange-500" />
                   Tips for more applicants
@@ -1355,7 +1355,7 @@ export default function PostJob() {
               </div>
 
               {/* Draft status */}
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
                 <div className="flex items-start gap-3">
                   <LuInfo className="mt-0.5 shrink-0 text-blue-600" />
                   <div>

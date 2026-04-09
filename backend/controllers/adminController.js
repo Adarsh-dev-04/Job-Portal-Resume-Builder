@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Job = require("../models/Job");
 const Application = require("../models/Application");
+const JobReport = require("../models/JobReport");
 
 /* =========================
    DASHBOARD STATS
@@ -221,7 +222,13 @@ exports.updateJobByAdmin = async (req, res) => {
     if (typeof isFeatured === "boolean") updateData.isFeatured = isFeatured;
     if (typeof isUrgent === "boolean") updateData.isUrgent = isUrgent;
     if (typeof isFlagged === "boolean") updateData.isFlagged = isFlagged;
-    if (typeof isActive === "boolean") updateData.isActive = isActive;
+
+    // Keep legacy isActive and public-facing status aligned.
+    // Public listing uses `status` + `approvalStatus`.
+    if (typeof isActive === "boolean") {
+      updateData.isActive = isActive;
+      updateData.status = isActive ? "active" : "closed";
+    }
     if (typeof rejectionReason === "string") updateData.rejectionReason = rejectionReason;
 
     const updatedJob = await Job.findByIdAndUpdate(req.params.id, updateData, {
@@ -279,5 +286,74 @@ exports.getAllApplicationsAdmin = async (req, res) => {
   } catch (error) {
     console.error("Admin get applications error:", error);
     res.status(500).json({ message: "Failed to fetch applications" });
+  }
+};
+
+/* =========================
+   JOB REPORTS
+========================= */
+exports.getAllJobReportsAdmin = async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    const query = {};
+    if (status && ["open", "reviewed", "resolved"].includes(status)) {
+      query.status = status;
+    }
+
+    const reports = await JobReport.find(query)
+      .populate(
+        "jobId",
+        "title company location employerId approvalStatus isFeatured isFlagged isActive status"
+      )
+      .populate("reporterId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(reports);
+  } catch (error) {
+    console.error("Admin get reports error:", error);
+    res.status(500).json({ message: "Failed to fetch reports" });
+  }
+};
+
+exports.updateJobReportByAdmin = async (req, res) => {
+  try {
+    const { status, adminNote } = req.body;
+
+    const updateData = {};
+
+    if (typeof adminNote === "string") {
+      updateData.adminNote = adminNote;
+    }
+
+    if (status && ["open", "reviewed", "resolved"].includes(status)) {
+      updateData.status = status;
+
+      if (status === "resolved") {
+        updateData.resolvedAt = new Date();
+        updateData.resolvedBy = req.userId;
+      } else {
+        updateData.resolvedAt = null;
+        updateData.resolvedBy = null;
+      }
+    }
+
+    const updated = await JobReport.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    })
+      .populate(
+        "jobId",
+        "title company location employerId approvalStatus isFeatured isFlagged isActive status"
+      )
+      .populate("reporterId", "name email");
+
+    if (!updated) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    return res.json({ message: "Report updated", report: updated });
+  } catch (error) {
+    console.error("Admin update report error:", error);
+    return res.status(500).json({ message: "Failed to update report" });
   }
 };

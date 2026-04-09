@@ -86,7 +86,7 @@ export default function CompanyProfileView() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
+          className="mb-6 flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 dark:hover:bg-orange-500/10"
         >
           <LuArrowLeft size={18} />
           Back
@@ -294,7 +294,7 @@ export default function CompanyProfileView() {
                     <a
                       key={job._id}
                       href={`/jobs/${job._id}`}
-                      className="block rounded-2xl border border-stone-200 p-4 transition hover:border-orange-200 hover:bg-orange-50"
+                      className="block rounded-2xl border border-stone-200 p-4 transition hover:border-orange-200 hover:bg-orange-50 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/10"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
