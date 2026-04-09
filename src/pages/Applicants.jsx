@@ -82,7 +82,7 @@ export default function Applicants() {
 
   async function loadJobDetails(jobId) {
     try {
-      const res = await fetch(`${API_BASE}/api/jobs/${jobId}`, {
+      const res = await fetch(`${API_BASE}/api/jobs/employer/${localStorage.getItem("userId")}/job/${jobId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const job = await res.json();
@@ -91,6 +91,22 @@ export default function Applicants() {
       console.error("Error loading job details:", error);
     }
   }
+
+  async function closeHandler(jobId) {
+    await fetch(`${API_BASE}/api/jobs/${jobId}/close`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await loadJobDetails(jobId);
+  }
+  async function reopenHandler(jobId) {
+    await fetch(`${API_BASE}/api/jobs/${jobId}/reopen`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await loadJobDetails(jobId);
+  }
+
 
   const statusCounts = useMemo(() => {
     const counts = {
@@ -191,7 +207,7 @@ export default function Applicants() {
 
   function formatSalary(salary) {
     if (!salary && salary !== 0) return "N/A";
-    return `₹${salary}`;
+    return `${salary}`;
   }
 
   function openDrawer(app) {
@@ -256,7 +272,11 @@ export default function Applicants() {
 
                   <div className="flex items-center gap-1.5 font-semibold text-stone-800">
                     <LuIndianRupee className="text-sm" />
-                    <span>{formatSalary(jobDetails?.salary)}</span>
+                    <span>{formatSalary(jobDetails?.salaryMin)}-{formatSalary(jobDetails?.salaryMax)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 font-semibold text-stone-800">
+                    <span>{jobDetails?.salaryPeriod}</span>
                   </div>
                 </div>
 
@@ -281,17 +301,23 @@ export default function Applicants() {
             </div>
 
             <div className="flex flex-col items-start xl:items-end gap-3">
-              <div className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
-                Active
+              <div className={jobDetails?.status === "active" ? "rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700 capitalize" : jobDetails?.status === "closed" ? "rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700 capitalize" : "rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-bold text-stone-700 capitalize"}>
+                {jobDetails?.status || "N/A"}
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <button className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white">
                   Edit Job
                 </button>
-                <button className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs sm:text-sm font-semibold text-red-700 transition hover:bg-red-600 hover:text-white">
-                  Close Job
-                </button>
+                {jobDetails?.status === "active" ? (
+                  <button className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs sm:text-sm font-semibold text-red-700 transition hover:bg-red-600 hover:text-white" onClick={() => closeHandler(jobDetails._id)}>
+                    Close Job
+                  </button>
+                ) : (
+                  <button className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs sm:text-sm font-semibold text-green-700 transition hover:bg-green-600 hover:text-white" onClick={() => reopenHandler(jobDetails._id)}>
+                    Reopen Job
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -427,8 +453,9 @@ export default function Applicants() {
         {/* Applicants List */}
         <div className="rounded-2xl border border-stone-200 bg-white shadow-sm overflow-hidden">
           {/* Desktop Header */}
-          <div className="hidden md:grid grid-cols-12 gap-4 border-b border-stone-200 bg-stone-50 px-5 py-4 text-[11px] font-bold uppercase tracking-wide text-stone-500">
+          <div className="hidden md:grid grid-cols-14 gap-4 border-b border-stone-200 bg-stone-50 px-5 py-4 text-[11px] font-bold uppercase tracking-wide text-stone-500">
             <div className="col-span-5">Candidate</div>
+            <div className="col-span-2">User Status</div>
             <div className="col-span-2">Status</div>
             <div className="col-span-2">Applied</div>
             <div className="col-span-3">Actions</div>
@@ -444,8 +471,9 @@ export default function Applicants() {
             <div>
               {filteredApplications.map((app, index) => {
                 const statusMeta = getStatusMeta(app.status);
-                const applicantName = app.applicantId?.name || "Unknown Applicant";
-                const applicantEmail = app.applicantId?.email || "No email";
+                const applicantName = app.applicantId?.name || app.candidateName || "Unknown Applicant";
+                const applicantEmail = app.applicantId?.email || app.candidateEmail || "No email";
+                const userStatus = app.candidateIsActive === false ? "Deactivated" : "Active";
                 const initials = getApplicantInitials(applicantName);
 
                 return (
@@ -455,7 +483,7 @@ export default function Applicants() {
                     className="cursor-pointer border-b border-stone-200 last:border-b-0 transition hover:bg-stone-50"
                   >
                     {/* Desktop row */}
-                    <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-4 items-center">
+                    <div className="hidden md:grid grid-cols-14 gap-4 px-5 py-4 items-center">
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
                         <div
                           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold ${getAvatarColors(
@@ -472,6 +500,12 @@ export default function Applicants() {
                             {applicantEmail}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="col-span-2 text-xs text-stone-600">
+                        <span className={userStatus === "Active" ? "text-green-600 font-medium bg-green-50 border border-green-600 rounded-full px-2 py-1" : "text-red-600 font-medium bg-red-50 border border-red-600 rounded-full px-2 py-1"}>
+                          {userStatus}
+                        </span>
                       </div>
 
                       <div className="col-span-2">
@@ -655,10 +689,10 @@ export default function Applicants() {
                 </div>
 
                 <h3 className="mt-3 text-xl font-extrabold text-stone-900">
-                  {displayedApplicant.applicantId?.name || "Unknown Applicant"}
+                  {displayedApplicant.applicantId?.name || displayedApplicant.candidateName || "Unknown Applicant"}
                 </h3>
                 <p className="mt-1 text-sm text-stone-500 break-all">
-                  {displayedApplicant.applicantId?.email || "No email"}
+                  {displayedApplicant.applicantId?.email || displayedApplicant.candidateEmail || "No email provided"}
                 </p>
 
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -753,14 +787,25 @@ export default function Applicants() {
                     <div>
                       <p className="text-xs text-stone-500">Full Name</p>
                       <p className="text-sm font-semibold text-stone-900">
-                        {displayedApplicant.applicantId?.name || "N/A"}
+                        {displayedApplicant.applicantId?.name || displayedApplicant.candidateName || "N/A"}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-xs text-stone-500">Email</p>
                       <p className="text-sm font-semibold text-stone-900 break-all">
-                        {displayedApplicant.applicantId?.email || "N/A"}
+                        {displayedApplicant.applicantId?.email || displayedApplicant.candidateEmail || "N/A"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-stone-500">User Status</p>
+                      <p className="text-sm font-semibold text-stone-900">
+                        {displayedApplicant.candidateIsActive !== undefined
+                          ? displayedApplicant.candidateIsActive
+                            ? "Active"
+                            : "Inactive"
+                          : "N/A"}
                       </p>
                     </div>
 

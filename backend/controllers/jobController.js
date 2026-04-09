@@ -326,6 +326,29 @@ exports.getEmployerJobs = async (req, res) => {
   }
 };
 
+/* ---------------- GET SINGLE JOB DETAILS (FOR EMPLOYER) ---------------- */
+exports.getJobDetailsForEmployer = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      employerId: req.userId,
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const normalized = normalizeJob(job);
+    res.json(normalized);
+  } catch (err) {
+    console.error("getEmployerJob error:", err);
+    res.status(500).json({
+      message: "Failed to fetch job",
+      error: err.message,
+    });
+  }
+};
+
 /* ---------------- DELETE JOB (EMPLOYER OWNER ONLY) ---------------- */
 exports.deleteJob = async (req, res) => {
   try {
@@ -345,6 +368,52 @@ exports.deleteJob = async (req, res) => {
     console.error("deleteJob error:", err);
     res.status(500).json({
       message: "Failed to delete job",
+      error: err.message,
+    });
+  }
+};
+/* ---------------- CLOSE JOB (EMPLOYER OWNER ONLY) ---------------- */
+exports.closeJob = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      employerId: req.userId,
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    job.status = "closed";
+    await job.save();
+    res.json({ message: "Job closed" });
+  } catch (err) {
+    console.error("closeJob error:", err);
+    res.status(500).json({
+      message: "Failed to close job",
+      error: err.message,
+    });
+  }
+};
+/* ---------------- REOPEN JOB (EMPLOYER OWNER ONLY) ---------------- */
+exports.reopenJob = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      employerId: req.userId,
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    job.status = "active";
+    await job.save();
+    res.json({ message: "Job reopened" });
+  } catch (err) {
+    console.error("reopenJob error:", err);
+    res.status(500).json({
+      message: "Failed to reopen job",
       error: err.message,
     });
   }

@@ -16,4 +16,10 @@ router.get("/:id", jobController.getJob);
 /* employer owner */
 router.delete("/:id", auth, employerOnly, jobController.deleteJob);
 
+router.post("/:id/close", auth, employerOnly, jobController.closeJob);
+router.post("/:id/reopen", auth, employerOnly, jobController.reopenJob);
+
+router.get("/employer/:employerId", auth, employerOnly, jobController.getEmployerJobs);
+router.get("/employer/:employerId/job/:id", auth, employerOnly, jobController.getJobDetailsForEmployer);
+
 module.exports = router;

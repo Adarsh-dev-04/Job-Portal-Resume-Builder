@@ -86,7 +86,9 @@ exports.deleteAccount = async (req, res) => {
     await Resume.deleteMany({ userId });
 
     // Delete all user's applications
-    await Application.deleteMany({ userId , status: "pending" });
+    await Application.deleteMany({ applicantId: userId, status: "pending" });
+
+    await Application.updateMany({ applicantId: userId }, { $set: { candidateIsActive: false } });
 
     // Delete the user account
     await User.findByIdAndDelete(userId);
@@ -105,6 +107,11 @@ exports.deleteProfile = async (req, res) => {
 
     // Delete all user's resumes first
     await Resume.deleteMany({ userId });
+
+    // Delete all user's applications
+    await Application.deleteMany({ applicantId: userId, status: "pending" });
+
+    await Application.updateMany({ applicantId: userId }, { $set: { candidateIsActive: false } });
 
     // Delete the user account
     await User.findByIdAndDelete(userId);

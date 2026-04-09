@@ -3,7 +3,7 @@ const Application = require("../models/Application");
 /* APPLY TO JOB */
 exports.applyJob = async (req, res) => {
   try {
-    const { jobId, resumeId } = req.body;
+    const { jobId, resumeId, applicantEmail, applicantName } = req.body;
 
     const existing = await Application.findOne({
       jobId,
@@ -16,7 +16,9 @@ exports.applyJob = async (req, res) => {
     const application = new Application({
       jobId,
       resumeId,
-      candidateId: req.userId
+      candidateId: req.userId,
+      candidateEmail: applicantEmail,
+      candidateName: applicantName
     });
 
     await application.save();

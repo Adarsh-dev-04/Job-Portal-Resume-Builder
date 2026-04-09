@@ -29,6 +29,8 @@ router.post("/", auth, async (req, res) => {
       jobId,
       applicantId: req.userId,
       resumeId,
+      candidateEmail: req.body.applicantEmail,
+      candidateName: req.body.applicantName
     });
 
     await application.save();

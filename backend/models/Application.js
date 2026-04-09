@@ -20,6 +20,23 @@ const applicationSchema = new mongoose.Schema(
       required: true,
     },
 
+    candidateEmail: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    candidateName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    candidateIsActive: {
+      type: Boolean,
+      default: true,
+    },
+
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],

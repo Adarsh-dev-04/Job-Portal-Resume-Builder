@@ -209,6 +209,8 @@ const JobDetails = () => {
     }
 
     const resumeId = selectedResume;
+    const email = localStorage.getItem("email");
+    const name = localStorage.getItem("name");
 
     if (!resumeId) {
       showToast("Please select a resume before applying", "error");
@@ -227,6 +229,8 @@ const JobDetails = () => {
         body: JSON.stringify({
           jobId,
           resumeId,
+          applicantEmail: email,
+          applicantName: name,
         }),
       });
 

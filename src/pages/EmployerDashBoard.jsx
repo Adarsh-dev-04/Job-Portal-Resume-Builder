@@ -57,6 +57,13 @@ export default function EmployerDashboard() {
     setPendingCount(statusCounts.pending);
     setRejectedCount(statusCounts.rejected);
   }
+  async function closeHandler(jobId) {
+    await fetch(`${API_BASE}/api/jobs/${jobId}/close`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    loadDashboardData();
+  }
 
   useEffect(() => {
     loadDashboardData();
@@ -150,8 +157,8 @@ export default function EmployerDashboard() {
                   </span>
                 </td>
                 <td className="text-left text-xs text-gray-500 p-4 font-semibold pr-0">
-                  <span className={job.isActive ? "bg-green-50 text-green-900 rounded-xl border border-green-300 py-1 px-2" : "bg-red-50 text-red-900 rounded-xl border border-red-400 py-1 px-2"}>
-                    {job.isActive ? "Active" : "Closed"}
+                  <span className={job.status === "active" ? "bg-green-50 text-green-900 rounded-xl border border-green-300 py-1 px-2 capitalize" : job.status === "closed" ? "bg-red-50 text-red-900 rounded-xl border border-red-400 py-1 px-2 capitalize" : "bg-yellow-50 text-yellow-900 rounded-xl border border-yellow-300 py-1 px-2 capitalize"}>
+                    {job.status}
                   </span>
                 </td>
                 <td className="text-left text-xs text-yellow-500 p-4 font-semibold pr-0">
@@ -165,7 +172,7 @@ export default function EmployerDashboard() {
                   <Link className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-blue-200 hover:text-blue-700 hover:border-blue-300" to={`/employer-dashboard/applicants/${job._id}`}>
                     View
                   </Link>
-                  <button className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-red-200 hover:text-red-700 hover:border-red-300">
+                  <button className="border-2 border-gray-200 text-black text-xs font-medium px-2 py-1 rounded-lg hover:bg-red-200 hover:text-red-700 hover:border-red-300" onClick={() => closeHandler(job._id)}>
                     Close
                   </button>
                 </td>
