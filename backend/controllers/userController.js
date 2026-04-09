@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Resume = require("../models/resume");
 const Application = require("../models/Application");
+const Job = require("../models/Job");
 const bcrypt = require("bcryptjs");
 
 /* ================= GET CURRENT USER PROFILE ================= */
@@ -59,6 +60,89 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+/* ================= UPDATE SIGN-IN CREDENTIALS ================= */
+exports.updateCredentials = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { currentPassword, newEmail, newPassword } = req.body;
+
+    if (!currentPassword) {
+      return res
+        .status(400)
+        .json({ message: "Current password is required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    const updates = {};
+
+    if (typeof newEmail === "string" && newEmail.trim()) {
+      const normalizedEmail = newEmail.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(normalizedEmail)) {
+        return res.status(400).json({ message: "Invalid email address" });
+      }
+
+      if (normalizedEmail !== (user.email || "").toLowerCase()) {
+        const exists = await User.findOne({
+          email: normalizedEmail,
+          _id: { $ne: userId },
+        });
+
+        if (exists) {
+          return res.status(409).json({ message: "Email already in use" });
+        }
+
+        updates.email = normalizedEmail;
+      }
+    }
+
+    if (typeof newPassword === "string" && newPassword.trim()) {
+      if (newPassword.trim().length < 6) {
+        return res
+          .status(400)
+          .json({ message: "New password must be at least 6 characters" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+      updates.password = hashedPassword;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No credential changes provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    return res.json({
+      message: "Credentials updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Update credentials error:", err);
+
+    if (err && err.code === 11000) {
+      return res.status(409).json({ message: "Email already in use" });
+    }
+
+    return res.status(500).json({ message: "Failed to update credentials" });
+  }
+};
+
 /* ================= DELETE ACCOUNT BY USER ================= */
 exports.deleteAccount = async (req, res) => {
   try {
@@ -76,24 +160,40 @@ exports.deleteAccount = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "Admin accounts cannot be deleted via this endpoint" });
+    }
+
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Delete all user's resumes first
+    if (user.role === "employer") {
+      const jobs = await Job.find({ employerId: userId }).select("_id");
+      const jobIds = jobs.map((j) => j._id);
+
+      if (jobIds.length > 0) {
+        await Application.deleteMany({ jobId: { $in: jobIds } });
+        await Job.deleteMany({ _id: { $in: jobIds } });
+      }
+
+      await User.findByIdAndDelete(userId);
+      return res.json({ message: "Employer account deleted" });
+    }
+
+    // Candidate cleanup
     await Resume.deleteMany({ userId });
 
-    // Delete all user's applications
     await Application.deleteMany({ applicantId: userId, status: "pending" });
+    await Application.updateMany(
+      { applicantId: userId },
+      { $set: { candidateIsActive: false } }
+    );
 
-    await Application.updateMany({ applicantId: userId }, { $set: { candidateIsActive: false } });
-
-    // Delete the user account
     await User.findByIdAndDelete(userId);
-
-    res.json({ message: "Account and all resumes deleted" });
+    return res.json({ message: "Account deleted" });
   } catch (err) {
     console.error("Delete account error:", err);
     res.status(500).json({ message: "Delete failed" });

@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AdminJobs from "./pages/admin/AdminJobs.jsx";
 import AdminApplications from "./pages/admin/AdminApplications.jsx";
+import EditJob from "./pages/EditJob.jsx";
 
 import "./index.css";
 
@@ -93,6 +94,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <ProtectedRoute role="employer">
               <PostJob />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Edit a Job (Employer Only) */}
+        <Route
+          path="/employer/edit-job/:jobId"
+          element={
+            <ProtectedRoute role="employer">
+              <EditJob />
             </ProtectedRoute>
           }
         />

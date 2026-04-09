@@ -22,6 +22,11 @@ export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const PAGE_SIZE = 12;
 
   // Search params from URL (if user comes from homepage search)
   const initialTitle = searchParams.get("title") || "";
@@ -40,11 +45,18 @@ export default function Jobs() {
       minSalary: "",
       type: "",
       workMode: "",
-    });
+    }, { page: 1, append: false });
   }, []);
 
-  async function loadJobs(filters = {}) {
-    setLoading(true);
+  async function loadJobs(filters = {}, options = {}) {
+    const nextPage = options.page || 1;
+    const append = Boolean(options.append);
+
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     setPageError("");
 
     try {
@@ -55,6 +67,10 @@ export default function Jobs() {
       if (filters.minSalary) params.append("minSalary", filters.minSalary);
       if (filters.type) params.append("type", filters.type);
       if (filters.workMode) params.append("workMode", filters.workMode);
+
+      // Pagination
+      params.append("page", String(nextPage));
+      params.append("limit", String(PAGE_SIZE));
 
       const queryString = params.toString();
       const url = queryString
@@ -72,17 +88,35 @@ export default function Jobs() {
 
       if (!res.ok) {
         setPageError(data?.message || "Failed to load jobs");
-        setJobs([]);
+        if (!append) {
+          setJobs([]);
+          setPage(1);
+          setHasMore(false);
+        }
         return;
       }
 
-      setJobs(Array.isArray(data) ? data : []);
+      // Backward compatibility: API may return array (old) or { jobs, hasMore, page }
+      const incomingJobs = Array.isArray(data) ? data : Array.isArray(data?.jobs) ? data.jobs : [];
+      const incomingHasMore = Array.isArray(data)
+        ? incomingJobs.length === PAGE_SIZE
+        : Boolean(data?.hasMore);
+      const incomingPage = Array.isArray(data) ? nextPage : Number(data?.page) || nextPage;
+
+      setJobs((prev) => (append ? [...prev, ...incomingJobs] : incomingJobs));
+      setPage(incomingPage);
+      setHasMore(incomingHasMore);
     } catch (err) {
       console.error("Failed to load jobs:", err);
       setPageError("Failed to load jobs");
-      setJobs([]);
+      if (!append) {
+        setJobs([]);
+        setPage(1);
+        setHasMore(false);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }
 
@@ -93,7 +127,7 @@ export default function Jobs() {
       minSalary: salary,
       type,
       workMode,
-    });
+    }, { page: 1, append: false });
   }
 
   function handleApplyFilters() {
@@ -103,7 +137,7 @@ export default function Jobs() {
       minSalary: salary,
       type,
       workMode,
-    });
+    }, { page: 1, append: false });
   }
 
   function handleReset() {
@@ -119,7 +153,21 @@ export default function Jobs() {
       minSalary: "",
       type: "",
       workMode: "",
-    });
+    }, { page: 1, append: false });
+  }
+
+  function handleLoadMore() {
+    if (loadingMore || loading) return;
+    loadJobs(
+      {
+        title,
+        location,
+        minSalary: salary,
+        type,
+        workMode,
+      },
+      { page: page + 1, append: true },
+    );
   }
 
   function formatSalary(job) {
@@ -526,6 +574,26 @@ export default function Jobs() {
                     );
                   })}
                 </div>
+
+                {/* Load more */}
+                {hasMore && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-800 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <LuLoaderCircle className="animate-spin" size={16} />
+                          Loading...
+                        </>
+                      ) : (
+                        "Load more"
+                      )}
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </section>

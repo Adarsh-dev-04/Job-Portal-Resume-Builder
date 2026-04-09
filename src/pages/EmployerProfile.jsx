@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import {
   LuBuilding2,
@@ -34,13 +34,43 @@ export default function EmployerProfile() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordAction, setPasswordAction] = useState(null); // "save" | "delete"
+
+  const [credentialForm, setCredentialForm] = useState({
+    email: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [credentialSaving, setCredentialSaving] = useState(false);
+  const [showCredentialModal, setShowCredentialModal] = useState(false);
+  const [credentialStep, setCredentialStep] = useState("choose"); // "choose" | "form"
+  const [credentialMode, setCredentialMode] = useState({ email: false, password: false });
 
   const hiringOptions = ["Engineering", "Design", "Marketing", "Sales", "Operations", "HR", "Finance"];
   const industrySamples = ["Technology", "Finance", "Healthcare", "Retail", "Manufacturing", "Education"];
+
+  const completion = useMemo(() => {
+    const checks = [
+      !!form.name,
+      !!form.email,
+      !!form.companyName,
+      !!form.companyWebsite,
+      !!form.industry,
+      !!form.companySize,
+      !!form.companyCity,
+      !!form.companyDescription,
+      (form.hiringFor || []).length > 0,
+    ];
+
+    const done = checks.filter(Boolean).length;
+    return Math.round((done / checks.length) * 100);
+  }, [form]);
 
   useEffect(() => {
     if (role !== "employer") return;
@@ -76,6 +106,11 @@ export default function EmployerProfile() {
         companyDescription: data.companyDescription || "",
         hiringFor: Array.isArray(data.hiringFor) ? data.hiringFor : [],
       });
+
+      setCredentialForm((prev) => ({
+        ...prev,
+        email: data.email || "",
+      }));
     } catch (error) {
       console.error(error);
       toast.error("Failed to load profile");
@@ -86,6 +121,100 @@ export default function EmployerProfile() {
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleCredentialChange(e) {
+    setCredentialForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleUpdateCredentials(e) {
+    e.preventDefault();
+
+    const trimmedCurrentPassword = credentialForm.currentPassword.trim();
+    const trimmedNewPassword = credentialForm.newPassword.trim();
+    const trimmedConfirm = credentialForm.confirmPassword.trim();
+    const trimmedEmail = credentialForm.email.trim();
+
+    if (!trimmedCurrentPassword) {
+      toast.error("Current password is required");
+      return;
+    }
+
+    const emailChanged =
+      credentialMode.email &&
+      trimmedEmail &&
+      trimmedEmail.toLowerCase() !== (form.email || "").toLowerCase();
+
+    const wantsPasswordChange = credentialMode.password && Boolean(trimmedNewPassword);
+    if (wantsPasswordChange) {
+      if (trimmedNewPassword.length < 6) {
+        toast.error("New password must be at least 6 characters");
+        return;
+      }
+      if (trimmedNewPassword !== trimmedConfirm) {
+        toast.error("New password and confirmation do not match");
+        return;
+      }
+    }
+
+    if (!emailChanged && !wantsPasswordChange) {
+      toast.error("No credential changes to update");
+      return;
+    }
+
+    setCredentialSaving(true);
+    try {
+      const payload = {
+        currentPassword: trimmedCurrentPassword,
+      };
+
+      if (emailChanged) payload.newEmail = trimmedEmail;
+      if (wantsPasswordChange) payload.newPassword = trimmedNewPassword;
+
+      const res = await fetch(`${API_BASE}/api/users/credentials`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok || !data) {
+        toast.error(data?.message || "Failed to update credentials");
+        return;
+      }
+
+      if (data?.user?.email) {
+        setForm((prev) => ({ ...prev, email: data.user.email }));
+        localStorage.setItem("email", data.user.email);
+        setCredentialForm((prev) => ({ ...prev, email: data.user.email }));
+      }
+
+      setCredentialForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+
+      toast.success(data?.message || "Credentials updated successfully");
+      setShowCredentialModal(false);
+      setCredentialStep("choose");
+      setCredentialMode({ email: false, password: false });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update credentials");
+    } finally {
+      setCredentialSaving(false);
+    }
   }
 
   function toggleHiringFor(value) {
@@ -107,11 +236,18 @@ export default function EmployerProfile() {
       return;
     }
 
-    // Show password confirmation modal
+    setPasswordAction("save");
+    setPasswordInput("");
     setShowPasswordModal(true);
   }
 
-  async function confirmAndSave(password) {
+  function handleDeleteAccount() {
+    setPasswordAction("delete");
+    setPasswordInput("");
+    setShowPasswordModal(true);
+  }
+
+  async function confirmPasswordAction(password) {
     if (!password.trim()) {
       toast.error("Password is required");
       return;
@@ -119,39 +255,81 @@ export default function EmployerProfile() {
 
     setPasswordLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/users/me`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...form,
-          password, // Send password for verification
-        }),
-      });
+      if (passwordAction === "delete") {
+        setDeleting(true);
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
+        const res = await fetch(`${API_BASE}/api/users/deleteAccount`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ password }),
+        });
 
-      if (!res.ok) {
-        toast.error(data?.message || "Failed to update profile");
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+
+        if (!res.ok) {
+          toast.error(data?.message || "Failed to delete account");
+          return;
+        }
+
+        toast.success(data?.message || "Account deleted successfully");
+        localStorage.clear();
+        window.location.href = "/";
         return;
       }
 
-      toast.success(data?.message || "Profile updated successfully");
-      setShowPasswordModal(false);
-      setPasswordInput("");
-      setIsEditMode(false);
+      if (passwordAction === "save") {
+        setSaving(true);
+
+        const res = await fetch(`${API_BASE}/api/users/me`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...form,
+            password,
+          }),
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+
+        if (!res.ok) {
+          toast.error(data?.message || "Failed to update profile");
+          return;
+        }
+
+        toast.success(data?.message || "Profile updated successfully");
+        setShowPasswordModal(false);
+        setPasswordInput("");
+        setPasswordAction(null);
+        setIsEditMode(false);
+        return;
+      }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update profile");
+      toast.error(
+        passwordAction === "delete"
+          ? "Failed to delete account"
+          : "Failed to update profile"
+      );
     } finally {
       setPasswordLoading(false);
+      setSaving(false);
+      setDeleting(false);
     }
   }
 
@@ -190,10 +368,10 @@ export default function EmployerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-100 py-8">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-stone-100">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-stone-900">Company Profile</h1>
             <p className="mt-2 text-stone-600">
@@ -225,51 +403,122 @@ export default function EmployerProfile() {
 
         {/* Form */}
         {!loading && (
-          <div className="space-y-6">
-            {/* Contact Information */}
-            <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-              <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                <h2 className="text-xl font-bold text-stone-900">Contact Information</h2>
-              </div>
-
-              <div className="space-y-5 p-8">
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700">
-                    <LuUsers className="mb-1 inline" size={16} /> Your Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    readOnly={!isEditMode}
-                    placeholder="Your Full Name"
-                    className={getInputClass()}
-                  />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+            <aside className="space-y-6">
+              <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-orange-500 text-2xl font-black text-white">
+                    {(form.companyName || form.name || "C").charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-stone-900">
+                      {form.companyName || "Company"}
+                    </h2>
+                    <p className="text-sm text-stone-500">Employer Account</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700">
-                    <LuMail className="mb-1 inline" size={16} /> Email
-                  </label>
-                  <input
-                    type="email"
-                    value={form.email}
-                    disabled
-                    className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-500"
-                  />
-                  <p className="mt-1 text-xs text-stone-500">Email cannot be changed</p>
+                <div className="mt-6">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-stone-700">Profile Completion</span>
+                    <span className="font-bold text-orange-600">{completion}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+                    <div
+                      className="h-full rounded-full bg-orange-500"
+                      style={{ width: `${completion}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Company Information */}
-            <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-              <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                <h2 className="text-xl font-bold text-stone-900">Company Information</h2>
+              {/* Contact Information */}
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
+                  <h2 className="text-xl font-bold text-stone-900">Contact Information</h2>
+                </div>
+
+                <div className="space-y-5 p-8">
+                  <div>
+                    <label className="block text-sm font-semibold text-stone-700">
+                      <LuUsers className="mb-1 inline" size={16} /> Your Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      readOnly={!isEditMode}
+                      placeholder="Your Full Name"
+                      className={getInputClass()}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-stone-700">
+                      <LuMail className="mb-1 inline" size={16} /> Email
+                    </label>
+                    <input
+                      type="email"
+                      value={form.email}
+                      disabled
+                      className="mt-2 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-500"
+                    />
+                    <p className="mt-1 text-xs text-stone-500">
+                      Use Sign-in Credentials to update your email
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-5 p-8">
+              {/* Sign-in Credentials */}
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
+                  <h2 className="text-xl font-bold text-stone-900">Sign-in Credentials</h2>
+                </div>
+
+                <div className="space-y-4 p-8">
+                  <p className="text-sm text-stone-600">
+                    Update your sign-in email or password. For security, your current password is required.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCredentialStep("choose");
+                      setCredentialMode({ email: false, password: false });
+                      setShowCredentialModal(true);
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-800 transition hover:bg-stone-50"
+                  >
+                    <LuLock size={16} />
+                    Update credentials
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-red-200 bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-black text-stone-900">Account Management</h3>
+                <p className="mt-2 text-xs leading-6 text-stone-500">
+                  Deleting your account will remove your company profile and job postings.
+                </p>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleting || passwordLoading}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-70"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </aside>
+
+            <div className="space-y-6">
+              {/* Company Information */}
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
+                  <h2 className="text-xl font-bold text-stone-900">Company Information</h2>
+                </div>
+
+                <div className="space-y-5 p-8">
                 <div>
                   <label className="block text-sm font-semibold text-stone-700">
                     <LuBuilding2 className="mb-1 inline" size={16} /> Company Name *
@@ -316,7 +565,7 @@ export default function EmployerProfile() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-semibold text-stone-700">Industry</label>
                     <input
@@ -383,134 +632,310 @@ export default function EmployerProfile() {
               </div>
             </div>
 
-            {/* Hiring Preferences */}
-            <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-              <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
-                <h2 className="text-xl font-bold text-stone-900">Currently Hiring For</h2>
-              </div>
-
-              <div className="space-y-3 p-8">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {hiringOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
-                        isEditMode
-                          ? "cursor-pointer border-stone-200 hover:border-orange-300 hover:bg-orange-50"
-                          : "cursor-default border-stone-200"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.hiringFor.includes(option)}
-                        onChange={() => toggleHiringFor(option)}
-                        className="h-4 w-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500"
-                      />
-                      <span className="text-sm font-medium text-stone-700">
-                        {option}
-                      </span>
-                    </label>
-                  ))}
+              {/* Hiring Preferences */}
+              <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                <div className="border-b border-stone-200 bg-gradient-to-r from-orange-50 to-amber-50 px-8 py-6">
+                  <h2 className="text-xl font-bold text-stone-900">Currently Hiring For</h2>
                 </div>
-              </div>
-            </div>
 
-            {/* Save Button */}
-            {isEditMode && (
-              <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm">
-                <div>
-                  <p className="text-sm text-stone-600">
-                    Make sure all information is accurate before saving
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setIsEditMode(false);
-                      fetchProfile(); // Reset to original values
-                    }}
-                    className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
-                  >
-                    {saving ? (
-                      <>
-                        <LuLoaderCircle className="animate-spin" size={18} />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <LuSave size={18} />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Password Confirmation Modal */}
-            {showPasswordModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="rounded-full bg-orange-100 p-3 text-orange-600">
-                      <LuLock size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-stone-900">Confirm Password</h3>
-                      <p className="text-sm text-stone-500">Enter your password to save changes</p>
-                    </div>
+                <div className="space-y-3 p-8">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {hiringOptions.map((option) => (
+                      <label
+                        key={option}
+                        className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
+                          isEditMode
+                            ? "cursor-pointer border-stone-200 hover:border-orange-300 hover:bg-orange-50"
+                            : "cursor-default border-stone-200"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.hiringFor.includes(option)}
+                          onChange={() => toggleHiringFor(option)}
+                          className="h-4 w-4 rounded border-stone-300 text-orange-500 focus:ring-orange-500"
+                        />
+                        <span className="text-sm font-medium text-stone-700">
+                          {option}
+                        </span>
+                      </label>
+                    ))}
                   </div>
+                </div>
+              </div>
 
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && confirmAndSave(passwordInput)}
-                    placeholder="Enter your password"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 mb-6"
-                    autoFocus
-                  />
-
-                  <div className="flex gap-3">
+              {/* Save Button */}
+              {isEditMode && (
+                <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-white px-8 py-6 shadow-sm">
+                  <div>
+                    <p className="text-sm text-stone-600">
+                      Make sure all information is accurate before saving
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => {
-                        setShowPasswordModal(false);
-                        setPasswordInput("");
+                        setIsEditMode(false);
+                        fetchProfile();
                       }}
-                      disabled={passwordLoading}
-                      className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl border border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
                     >
-                      <LuX className="inline mr-2" size={16} />
                       Cancel
                     </button>
                     <button
-                      onClick={() => confirmAndSave(passwordInput)}
-                      disabled={passwordLoading || !passwordInput.trim()}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300"
                     >
-                      {passwordLoading ? (
+                      {saving ? (
                         <>
-                          <LuLoaderCircle className="animate-spin" size={16} />
-                          Verifying...
+                          <LuLoaderCircle className="animate-spin" size={18} />
+                          Saving...
                         </>
                       ) : (
                         <>
-                          <LuCheck size={16} />
-                          Confirm
+                          <LuSave size={18} />
+                          Save Changes
                         </>
                       )}
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Password Confirmation Modal */}
+              {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                  <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                        <LuLock size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-stone-900">Confirm Password</h3>
+                        <p className="text-sm text-stone-500">
+                          {passwordAction === "delete"
+                            ? "Enter your password to delete your account"
+                            : "Enter your password to save changes"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <input
+                      type="password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && confirmPasswordAction(passwordInput)}
+                      placeholder="Enter your password"
+                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 mb-6"
+                      autoFocus
+                    />
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setShowPasswordModal(false);
+                          setPasswordInput("");
+                          setPasswordAction(null);
+                        }}
+                        disabled={passwordLoading}
+                        className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <LuX className="inline mr-2" size={16} />
+                        Cancel
+                      </button>
+                      <button
+                          onClick={() => confirmPasswordAction(passwordInput)}
+                        disabled={passwordLoading || !passwordInput.trim()}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                      >
+                        {passwordLoading ? (
+                          <>
+                            <LuLoaderCircle className="animate-spin" size={16} />
+                              {passwordAction === "delete" ? "Deleting..." : "Verifying..."}
+                          </>
+                        ) : (
+                          <>
+                            <LuCheck size={16} />
+                              {passwordAction === "delete" ? "Delete" : "Confirm"}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Credentials Update Modal */}
+              {showCredentialModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                  <div className="w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+                    <div className="mb-6 flex items-start gap-3">
+                      <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                        <LuLock size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-stone-900">Update credentials</h3>
+                        <p className="mt-1 text-sm text-stone-500">
+                          Current password is required to confirm changes.
+                        </p>
+                      </div>
+                    </div>
+
+                    {credentialStep === "choose" ? (
+                      <div className="space-y-5">
+                        <p className="text-sm text-stone-600">What would you like to change?</p>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCredentialMode({ email: true, password: false });
+                              setCredentialStep("form");
+                            }}
+                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                          >
+                            <div className="flex items-center gap-2 font-semibold text-stone-900">
+                              <LuMail size={16} /> Change email
+                            </div>
+                            <p className="mt-1 text-sm text-stone-500">Update the email used to sign in.</p>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCredentialMode({ email: false, password: true });
+                              setCredentialStep("form");
+                            }}
+                            className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                          >
+                            <div className="flex items-center gap-2 font-semibold text-stone-900">
+                              <LuLock size={16} /> Change password
+                            </div>
+                            <p className="mt-1 text-sm text-stone-500">Set a new password for your account.</p>
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCredentialModal(false);
+                            setCredentialStep("choose");
+                            setCredentialMode({ email: false, password: false });
+                            setCredentialForm((prev) => ({
+                              ...prev,
+                              currentPassword: "",
+                              newPassword: "",
+                              confirmPassword: "",
+                            }));
+                          }}
+                          className="w-full rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                        >
+                          <LuX className="mr-2 inline" size={16} />
+                          Close
+                        </button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleUpdateCredentials} className="space-y-5">
+                        {credentialMode.email && (
+                          <div>
+                            <label className="block text-sm font-semibold text-stone-700">
+                              <LuMail className="mb-1 inline" size={16} /> New email
+                            </label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={credentialForm.email}
+                              onChange={handleCredentialChange}
+                              placeholder="Enter new email"
+                              className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="block text-sm font-semibold text-stone-700">
+                            <LuLock className="mb-1 inline" size={16} /> Current password
+                          </label>
+                          <input
+                            type="password"
+                            name="currentPassword"
+                            value={credentialForm.currentPassword}
+                            onChange={handleCredentialChange}
+                            placeholder="Enter current password"
+                            className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                            autoFocus
+                          />
+                        </div>
+
+                        {credentialMode.password && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold text-stone-700">New password</label>
+                              <input
+                                type="password"
+                                name="newPassword"
+                                value={credentialForm.newPassword}
+                                onChange={handleCredentialChange}
+                                placeholder="Enter new password"
+                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold text-stone-700">Confirm new password</label>
+                              <input
+                                type="password"
+                                name="confirmPassword"
+                                value={credentialForm.confirmPassword}
+                                onChange={handleCredentialChange}
+                                placeholder="Re-enter new password"
+                                className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCredentialStep("choose");
+                              setCredentialMode({ email: false, password: false });
+                              setCredentialForm((prev) => ({
+                                ...prev,
+                                currentPassword: "",
+                                newPassword: "",
+                                confirmPassword: "",
+                              }));
+                            }}
+                            disabled={credentialSaving}
+                            className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Back
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={credentialSaving}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-stone-300"
+                          >
+                            {credentialSaving ? (
+                              <>
+                                <LuLoaderCircle className="animate-spin" size={16} />
+                                Updating...
+                              </>
+                            ) : (
+                              "Update"
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
         )}
       </div>

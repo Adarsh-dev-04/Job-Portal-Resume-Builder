@@ -210,6 +210,8 @@ exports.getAllJobs = async (req, res) => {
       category,
       experience,
       employerId,
+      page,
+      limit,
     } = req.query;
 
     let query = {
@@ -264,14 +266,44 @@ exports.getAllJobs = async (req, res) => {
       ];
     }
 
-    const jobs = await Job.find(query).sort({
-      isFeatured: -1,
-      createdAt: -1,
-    });
+    const hasPaginationParams = page !== undefined || limit !== undefined;
+
+    const parsedLimitRaw = Number(limit);
+    const parsedPageRaw = Number(page);
+    const parsedLimit = Number.isFinite(parsedLimitRaw) && parsedLimitRaw > 0 ? parsedLimitRaw : 12;
+    const safeLimit = Math.min(parsedLimit, 50);
+    const parsedPage = Number.isFinite(parsedPageRaw) && parsedPageRaw > 0 ? parsedPageRaw : 1;
+
+    if (!hasPaginationParams) {
+      const jobs = await Job.find(query).sort({
+        isFeatured: -1,
+        createdAt: -1,
+      });
+
+      const normalizedJobs = jobs.map((job) => normalizeJob(job));
+      return res.json(normalizedJobs);
+    }
+
+    const total = await Job.countDocuments(query);
+
+    const jobs = await Job.find(query)
+      .sort({
+        isFeatured: -1,
+        createdAt: -1,
+      })
+      .skip((parsedPage - 1) * safeLimit)
+      .limit(safeLimit);
 
     const normalizedJobs = jobs.map((job) => normalizeJob(job));
+    const hasMore = parsedPage * safeLimit < total;
 
-    res.json(normalizedJobs);
+    return res.json({
+      jobs: normalizedJobs,
+      total,
+      page: parsedPage,
+      limit: safeLimit,
+      hasMore,
+    });
   } catch (err) {
     console.error("getAllJobs error:", err);
     res.status(500).json({
@@ -344,6 +376,128 @@ exports.getJobDetailsForEmployer = async (req, res) => {
     console.error("getEmployerJob error:", err);
     res.status(500).json({
       message: "Failed to fetch job",
+      error: err.message,
+    });
+  }
+};
+
+/* ---------------- UPDATE JOB (EMPLOYER OWNER ONLY) ---------------- */
+exports.updateJob = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      employerId: req.userId,
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const {
+      title,
+      company,
+      location,
+      description,
+      type,
+      category,
+      experience,
+      workMode,
+      salaryMin,
+      salaryMax,
+      salaryPeriod,
+      vacancies,
+      requirements,
+      additionalRequirements,
+      benefits,
+      closingDate,
+      status,
+    } = req.body;
+
+    // Update basic fields if provided
+    if (title !== undefined) job.title = String(title).trim();
+    if (company !== undefined) job.company = String(company).trim();
+    if (location !== undefined) job.location = String(location).trim();
+    if (description !== undefined) job.description = String(description).trim();
+    if (type !== undefined) job.type = type;
+    if (category !== undefined) job.category = category;
+    if (experience !== undefined) job.experience = experience;
+    if (workMode !== undefined) job.workMode = workMode;
+    if (additionalRequirements !== undefined)
+      job.additionalRequirements = additionalRequirements;
+
+    // Update salary fields
+    if (salaryMin !== undefined && salaryMin !== null && salaryMin !== "") {
+      job.salaryMin = Number(salaryMin);
+    } else if (salaryMin === null || salaryMin === "") {
+      job.salaryMin = null;
+    }
+
+    if (salaryMax !== undefined && salaryMax !== null && salaryMax !== "") {
+      job.salaryMax = Number(salaryMax);
+    } else if (salaryMax === null || salaryMax === "") {
+      job.salaryMax = null;
+    }
+
+    if (salaryPeriod !== undefined) job.salaryPeriod = salaryPeriod;
+
+    // Validate salary
+    if (
+      job.salaryMin !== null &&
+      job.salaryMax !== null &&
+      job.salaryMin > job.salaryMax
+    ) {
+      return res.status(400).json({
+        message: "salaryMin cannot be greater than salaryMax",
+      });
+    }
+
+    // Update vacancies
+    if (vacancies !== undefined && vacancies !== null && vacancies !== "") {
+      const parsedVacancies = Number(vacancies);
+      if (parsedVacancies < 1) {
+        return res.status(400).json({
+          message: "vacancies must be at least 1",
+        });
+      }
+      job.vacancies = parsedVacancies;
+    }
+
+    // Update requirements (skills)
+    if (requirements !== undefined) {
+      const parsedRequirements = Array.isArray(requirements)
+        ? requirements.map((s) => String(s).trim()).filter(Boolean)
+        : [];
+      job.requirements = parsedRequirements;
+    }
+
+    // Update benefits
+    if (benefits !== undefined) {
+      const parsedBenefits = Array.isArray(benefits)
+        ? benefits.map((b) => String(b).trim()).filter(Boolean)
+        : [];
+      job.benefits = parsedBenefits;
+    }
+
+    // Update closing date
+    if (closingDate !== undefined) {
+      job.closingDate = closingDate || null;
+    }
+
+    // Update status
+    if (status !== undefined) {
+      job.status = status;
+    }
+
+    await job.save();
+
+    res.json({
+      message: "Job updated successfully",
+      job: normalizeJob(job),
+    });
+  } catch (err) {
+    console.error("updateJob error:", err);
+    res.status(500).json({
+      message: "Failed to update job",
       error: err.message,
     });
   }

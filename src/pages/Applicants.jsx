@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   LuUsers,
   LuMapPin,
@@ -25,6 +25,7 @@ export default function Applicants() {
 
   const token = localStorage.getItem("token");
   const { jobId } = useParams();
+  const navigate = useNavigate();
 
   const [jobDetails, setJobDetails] = useState(null);
 
@@ -92,20 +93,7 @@ export default function Applicants() {
     }
   }
 
-  async function closeHandler(jobId) {
-    await fetch(`${API_BASE}/api/jobs/${jobId}/close`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await loadJobDetails(jobId);
-  }
-  async function reopenHandler(jobId) {
-    await fetch(`${API_BASE}/api/jobs/${jobId}/reopen`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await loadJobDetails(jobId);
-  }
+ 
 
 
   const statusCounts = useMemo(() => {
@@ -297,31 +285,109 @@ export default function Applicants() {
                     )}
                   </div>
                 )}
+
+                {/* Additional Job Details */}
+                <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {jobDetails?.workMode && (
+                    <div className="rounded-xl bg-stone-50 p-3 border border-stone-200">
+                      <p className="text-xs text-stone-500 font-semibold mb-1">Work Mode</p>
+                      <p className="text-sm font-bold text-stone-900">
+                        {jobDetails.workMode}
+                      </p>
+                    </div>
+                  )}
+
+                  {jobDetails?.experience && (
+                    <div className="rounded-xl bg-stone-50 p-3 border border-stone-200">
+                      <p className="text-xs text-stone-500 font-semibold mb-1">Experience</p>
+                      <p className="text-sm font-bold text-stone-900">
+                        {jobDetails.experience}
+                      </p>
+                    </div>
+                  )}
+
+                  {jobDetails?.category && (
+                    <div className="rounded-xl bg-stone-50 p-3 border border-stone-200">
+                      <p className="text-xs text-stone-500 font-semibold mb-1">Category</p>
+                      <p className="text-sm font-bold text-stone-900">
+                        {jobDetails.category}
+                      </p>
+                    </div>
+                  )}
+
+                  {jobDetails?.vacancies && (
+                    <div className="rounded-xl bg-stone-50 p-3 border border-stone-200">
+                      <p className="text-xs text-stone-500 font-semibold mb-1">Vacancies</p>
+                      <p className="text-sm font-bold text-stone-900">
+                        {jobDetails.vacancies}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+
               </div>
             </div>
 
-            <div className="flex flex-col items-start xl:items-end gap-3">
+            <div className="flex w-full flex-col items-end gap-3 xl:w-auto xl:self-stretch xl:justify-between xl:gap-0">
               <div className={jobDetails?.status === "active" ? "rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700 capitalize" : jobDetails?.status === "closed" ? "rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700 capitalize" : "rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-bold text-stone-700 capitalize"}>
                 {jobDetails?.status || "N/A"}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white">
+              <div className="flex flex-wrap justify-end gap-2">
+                <button
+                  onClick={() => navigate(`/jobs/${jobDetails._id}`)}
+                  className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs sm:text-sm font-semibold text-green-700 transition hover:bg-green-600 hover:text-white"
+                >
+                  View Job
+                </button>
+                <button
+                  onClick={() => navigate(`/employer/edit-job/${jobDetails._id}`)}
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white"
+                >
                   Edit Job
                 </button>
-                {jobDetails?.status === "active" ? (
-                  <button className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs sm:text-sm font-semibold text-red-700 transition hover:bg-red-600 hover:text-white" onClick={() => closeHandler(jobDetails._id)}>
-                    Close Job
-                  </button>
-                ) : (
-                  <button className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs sm:text-sm font-semibold text-green-700 transition hover:bg-green-600 hover:text-white" onClick={() => reopenHandler(jobDetails._id)}>
-                    Reopen Job
-                  </button>
-                )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Job Description Section */}
+        {jobDetails?.description && (
+          <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-stone-900 mb-3">Job Description</h2>
+            <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">
+              {jobDetails.description}
+            </p>
+          </div>
+        )}
+
+        {/* Additional Requirements Section */}
+        {jobDetails?.additionalRequirements && (
+          <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-stone-900 mb-3">Additional Requirements</h2>
+            <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">
+              {jobDetails.additionalRequirements}
+            </p>
+          </div>
+        )}
+
+        {/* Benefits & Perks Section */}
+        {!!jobDetails?.benefits?.length && (
+          <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-stone-900 mb-4">Benefits & Perks</h2>
+            <div className="flex flex-wrap gap-2">
+              {jobDetails.benefits.map((benefit, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700 border border-purple-200"
+                >
+                  {benefit}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* KPI Cards */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

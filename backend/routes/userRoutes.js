@@ -20,6 +20,9 @@ router.put("/profile", auth, userController.updateProfile);
 // DELETE ACCOUNT and all resumes
 router.delete("/deleteAccount", auth, userController.deleteAccount);
 
+// UPDATE SIGN-IN CREDENTIALS (email/password)
+router.patch("/credentials", auth, userController.updateCredentials);
+
 // GET COMPANY PROFILE
 router.get("/company", auth, userController.getCompany);
 

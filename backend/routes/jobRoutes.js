@@ -8,6 +8,7 @@ const jobController = require("../controllers/jobController");
 
 /* employer only */
 router.post("/", auth, employerOnly, jobController.createJob);
+router.patch("/:id", auth, employerOnly, jobController.updateJob);
 
 /* public */
 router.get("/", jobController.getAllJobs);

@@ -50,6 +50,18 @@ export default function ProfilePage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordAction, setPasswordAction] = useState(null); // "save" | "delete"
 
+  // Credentials update modal
+  const [credentialForm, setCredentialForm] = useState({
+    email: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [credentialSaving, setCredentialSaving] = useState(false);
+  const [showCredentialModal, setShowCredentialModal] = useState(false);
+  const [credentialStep, setCredentialStep] = useState("choose"); // "choose" | "form"
+  const [credentialMode, setCredentialMode] = useState({ email: false, password: false });
+
   const jobTypeOptions = ["Full-Time", "Part-Time", "Internship", "Contract", "Freelance"];
   const workModeOptions = ["On-site", "Remote", "Hybrid"];
 
@@ -96,11 +108,107 @@ export default function ProfilePage() {
 
       setForm(profileData);
       setOriginalForm(profileData);
+      setCredentialForm((prev) => ({ ...prev, email: profileData.email || "" }));
     } catch (error) {
       console.error(error);
       showToast("Failed to load profile", "error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleCredentialChange(e) {
+    setCredentialForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleUpdateCredentials(e) {
+    e.preventDefault();
+
+    const trimmedCurrentPassword = credentialForm.currentPassword.trim();
+    const trimmedNewPassword = credentialForm.newPassword.trim();
+    const trimmedConfirm = credentialForm.confirmPassword.trim();
+    const trimmedEmail = credentialForm.email.trim();
+
+    if (!trimmedCurrentPassword) {
+      showToast("Current password is required", "error");
+      return;
+    }
+
+    const emailChanged =
+      credentialMode.email &&
+      trimmedEmail &&
+      trimmedEmail.toLowerCase() !== (form.email || "").toLowerCase();
+
+    const wantsPasswordChange = credentialMode.password && Boolean(trimmedNewPassword);
+
+    if (wantsPasswordChange) {
+      if (trimmedNewPassword.length < 6) {
+        showToast("New password must be at least 6 characters", "error");
+        return;
+      }
+      if (trimmedNewPassword !== trimmedConfirm) {
+        showToast("New password and confirmation do not match", "error");
+        return;
+      }
+    }
+
+    if (!emailChanged && !wantsPasswordChange) {
+      showToast("No credential changes to update", "error");
+      return;
+    }
+
+    setCredentialSaving(true);
+    try {
+      const payload = {
+        currentPassword: trimmedCurrentPassword,
+      };
+      if (emailChanged) payload.newEmail = trimmedEmail;
+      if (wantsPasswordChange) payload.newPassword = trimmedNewPassword;
+
+      const res = await fetch(`${API_BASE}/api/users/credentials`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok || !data) {
+        showToast(data?.message || "Failed to update credentials", "error");
+        return;
+      }
+
+      if (data?.user?.email) {
+        setForm((prev) => ({ ...prev, email: data.user.email }));
+        setOriginalForm((prev) => (prev ? { ...prev, email: data.user.email } : prev));
+        localStorage.setItem("email", data.user.email);
+        setCredentialForm((prev) => ({ ...prev, email: data.user.email }));
+      }
+
+      setCredentialForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+
+      showToast(data?.message || "Credentials updated successfully", "success");
+      setShowCredentialModal(false);
+      setCredentialStep("choose");
+      setCredentialMode({ email: false, password: false });
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to update credentials", "error");
+    } finally {
+      setCredentialSaving(false);
     }
   }
 
@@ -366,6 +474,26 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Sign-in Credentials */}
+            <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-black text-stone-900">Sign-in Credentials</h3>
+              <p className="mt-2 text-xs leading-6 text-stone-500">
+                Update your sign-in email or password. Current password is required.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCredentialStep("choose");
+                  setCredentialMode({ email: false, password: false });
+                  setShowCredentialModal(true);
+                }}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-800 transition hover:bg-stone-50"
+              >
+                <LuLock size={16} />
+                Update credentials
+              </button>
+            </div>
+
             <div className="rounded-3xl border border-red-200 bg-white p-5 shadow-sm">
               <h3 className="text-sm font-black text-stone-900">Danger Zone</h3>
               <p className="mt-2 text-xs leading-6 text-stone-500">
@@ -407,7 +535,9 @@ export default function ProfilePage() {
                     className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 pl-11 text-sm text-stone-500"
                   />
                 </div>
-                <p className="mt-1 text-xs text-stone-500">Email cannot be changed</p>
+                <p className="mt-1 text-xs text-stone-500">
+                  Use Sign-in Credentials to update your email
+                </p>
               </div>
 
               <Field
@@ -623,6 +753,176 @@ export default function ProfilePage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Update Modal */}
+      {showCredentialModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-8 shadow-lg">
+            <div className="mb-6 flex items-start gap-3">
+              <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                <LuLock size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-stone-900">Update credentials</h3>
+                <p className="mt-1 text-sm text-stone-500">
+                  Current password is required to confirm changes.
+                </p>
+              </div>
+            </div>
+
+            {credentialStep === "choose" ? (
+              <div className="space-y-5">
+                <p className="text-sm text-stone-600">What would you like to change?</p>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCredentialMode({ email: true, password: false });
+                      setCredentialStep("form");
+                    }}
+                    className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                  >
+                    <div className="flex items-center gap-2 font-semibold text-stone-900">
+                      <LuMail size={16} /> Change email
+                    </div>
+                    <p className="mt-1 text-sm text-stone-500">Update the email used to sign in.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCredentialMode({ email: false, password: true });
+                      setCredentialStep("form");
+                    }}
+                    className="rounded-2xl border border-stone-200 p-5 text-left transition hover:bg-stone-50"
+                  >
+                    <div className="flex items-center gap-2 font-semibold text-stone-900">
+                      <LuLock size={16} /> Change password
+                    </div>
+                    <p className="mt-1 text-sm text-stone-500">Set a new password for your account.</p>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCredentialModal(false);
+                    setCredentialStep("choose");
+                    setCredentialMode({ email: false, password: false });
+                    setCredentialForm((prev) => ({
+                      ...prev,
+                      currentPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    }));
+                  }}
+                  className="w-full rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100"
+                >
+                  <LuX className="mr-2 inline" size={16} />
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleUpdateCredentials} className="space-y-5">
+                {credentialMode.email && (
+                  <div>
+                    <label className="block text-sm font-semibold text-stone-700">
+                      <LuMail className="mb-1 inline" size={16} /> New email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={credentialForm.email}
+                      onChange={handleCredentialChange}
+                      placeholder="Enter new email"
+                      className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-stone-700">
+                    <LuLock className="mb-1 inline" size={16} /> Current password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={credentialForm.currentPassword}
+                    onChange={handleCredentialChange}
+                    placeholder="Enter current password"
+                    className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    autoFocus
+                  />
+                </div>
+
+                {credentialMode.password && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-stone-700">New password</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={credentialForm.newPassword}
+                        onChange={handleCredentialChange}
+                        placeholder="Enter new password"
+                        className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-stone-700">Confirm new password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={credentialForm.confirmPassword}
+                        onChange={handleCredentialChange}
+                        placeholder="Re-enter new password"
+                        className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCredentialStep("choose");
+                      setCredentialMode({ email: false, password: false });
+                      setCredentialForm((prev) => ({
+                        ...prev,
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                      }));
+                    }}
+                    disabled={credentialSaving}
+                    className="flex-1 rounded-xl border border-stone-300 px-4 py-3 font-semibold text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={credentialSaving}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-stone-300"
+                  >
+                    {credentialSaving ? (
+                      <>
+                        <LuLoaderCircle className="animate-spin" size={16} />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update"
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
