@@ -17,14 +17,52 @@ const app = express();
 // Needed for secure cookies behind proxies (Vercel/Render/etc.)
 app.set("trust proxy", 1);
 
+const devOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+];
+
+const envOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? envOrigins
+    : Array.from(new Set([...devOrigins, ...envOrigins]));
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow same-origin / non-browser requests (no Origin header)
+    if (!origin) return callback(null, true);
+
+    // If no allowlist configured, default allow in development.
+    if (allowedOrigins.length === 0 && process.env.NODE_ENV !== "production") {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
 app.use(
-  cors({
-    origin: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
+  cors(corsOptions),
 );
+
+app.options("*", cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json());
