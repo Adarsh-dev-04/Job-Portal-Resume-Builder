@@ -464,7 +464,7 @@ This project helped strengthen my skills in:
 
 ## License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the [**MIT License**](LICENSE).
 
 ---
 
