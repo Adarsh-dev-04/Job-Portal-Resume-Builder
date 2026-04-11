@@ -17,10 +17,39 @@ const app = express();
 // Needed for secure cookies behind proxies (Vercel/Render/etc.)
 app.set("trust proxy", 1);
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "")
+const normalizeOrigin = (origin) => origin.replace(/\/+$/, "");
+
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
-  .filter(Boolean);
+  .filter(Boolean)
+  .map(normalizeOrigin);
+
+const defaultProdOrigins = ["https://job-portal-resume-builder.vercel.app"];
+
+const allowedOrigins = Array.from(
+  new Set([
+    ...configuredOrigins,
+    ...(process.env.NODE_ENV === "production" ? defaultProdOrigins : []),
+  ])
+);
+
+const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === "true";
+
+function isAllowedOrigin(origin) {
+  const normalized = normalizeOrigin(origin);
+
+  if (allowedOrigins.includes(normalized)) return true;
+
+  if (
+    allowVercelPreviews &&
+    /^https:\/\/job-portal-resume-builder-.*\.vercel\.app$/.test(normalized)
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 const corsOptions = {
   origin(origin, callback) {
@@ -31,7 +60,7 @@ const corsOptions = {
     if (process.env.NODE_ENV !== "production") return callback(null, true);
 
     // Prod: explicit allowlist only
-    return callback(null, allowedOrigins.includes(origin));
+    return callback(null, isAllowedOrigin(origin));
   },
   credentials: true,
 };

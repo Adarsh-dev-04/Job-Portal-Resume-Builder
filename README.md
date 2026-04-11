@@ -169,6 +169,12 @@ Example production CORS_ORIGINS value:
 CORS_ORIGINS=https://job-portal-resume-builder.vercel.app
 ```
 
+Optional for Vercel preview deployments:
+
+```env
+ALLOW_VERCEL_PREVIEWS=true
+```
+
 ## Important Implementation Notes
 
 - Cookie auth with cross-origin requires credentials include on frontend fetch calls
