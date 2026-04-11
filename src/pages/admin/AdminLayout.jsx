@@ -3,6 +3,7 @@ import { API_BASE } from "../../config";
 import { clearAuthState, deleteCookie } from "../../utils/cookies";
 import {
   LuLayoutDashboard,
+  LuUser,
   LuUsers,
   LuBriefcaseBusiness,
   LuClipboardList,
@@ -17,6 +18,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { label: "Dashboard", path: "/admin", icon: <LuLayoutDashboard size={18} /> },
+    { label: "My Profile", path: "/admin/profile", icon: <LuUser size={18} /> },
     { label: "Users", path: "/admin/users", icon: <LuUsers size={18} /> },
     { label: "Jobs", path: "/admin/jobs", icon: <LuBriefcaseBusiness size={18} /> },
     { label: "Applications", path: "/admin/applications", icon: <LuClipboardList size={18} /> },

@@ -180,6 +180,8 @@ export default function Navbar() {
 
     if (role === "employer") {
       navigate("/employer/profile");
+    } else if (role === "admin") {
+      navigate("/admin/profile");
     } else {
       navigate("/profile");
     }
@@ -276,19 +278,21 @@ export default function Navbar() {
                       ) : (
                         <LuUser size={18} />
                       )}
-                      {role === "employer" ? "Company Profile" : "My Profile"}
+                      {role === "employer"
+                        ? "Company Profile"
+                        : "My Profile"}
                     </button>
 
                     <Link
-                      to={role === "employer" ? "/employer-dashboard" : "/my-applications"}
+                      to={role === "employer" ? "/employer-dashboard" :role === 'candidate' ? "/my-applications" : "/admin"}
                       onClick={() => setProfileOpen(false)}
                       className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
                     >
                       <LuLayoutDashboard size={18} />
-                      Dashboard
+                      {role=== 'admin' ? "Admin Panel" : "Dashboard"}
                     </Link>
 
-                    {role !== "employer" && (
+                    {role === "candidate" && (
                       <Link
                         to="/resume"
                         onClick={() => setProfileOpen(false)}

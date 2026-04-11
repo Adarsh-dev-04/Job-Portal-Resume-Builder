@@ -28,6 +28,7 @@ import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AdminJobs from "./pages/admin/AdminJobs.jsx";
 import AdminApplications from "./pages/admin/AdminApplications.jsx";
 import AdminReports from "./pages/admin/AdminReports.jsx";
+import AdminProfile from "./pages/admin/AdminProfile.jsx";
 import EditJob from "./pages/EditJob.jsx";
 
 import "./index.css";
@@ -139,6 +140,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           }
         >
           <Route index element={<AdminDashboard />} />
+          <Route path="profile" element={<AdminProfile />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="jobs" element={<AdminJobs />} />
           <Route path="applications" element={<AdminApplications />} />
