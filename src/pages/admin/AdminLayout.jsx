@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../config";
-import { deleteCookie } from "../../utils/cookies";
+import { clearAuthState, deleteCookie } from "../../utils/cookies";
 import {
   LuLayoutDashboard,
   LuUsers,
@@ -39,14 +39,10 @@ export default function AdminLayout() {
     deleteCookie("email");
     deleteCookie("userId");
     deleteCookie("companyName");
+    clearAuthState();
 
     // Clean up legacy storage keys without nuking theme/drafts.
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("email");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("companyName");
 
     navigate("/login");
     window.location.reload();

@@ -98,10 +98,11 @@ exports.login = async (req, res) => {
     );
 
     const maxAgeMs = 7 * 24 * 60 * 60 * 1000;
-    const secure = process.env.NODE_ENV === "production";
+    const isProduction = process.env.NODE_ENV === "production";
     const baseCookie = {
-      sameSite: "lax",
-      secure,
+      // Cross-origin frontend/backend on production requires SameSite=None + Secure.
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
       maxAge: maxAgeMs,
       path: "/",
     };
@@ -137,8 +138,12 @@ exports.login = async (req, res) => {
 
 /* ================= LOGOUT ================= */
 exports.logout = async (req, res) => {
-  const secure = process.env.NODE_ENV === "production";
-  const base = { sameSite: "lax", secure, path: "/" };
+  const isProduction = process.env.NODE_ENV === "production";
+  const base = {
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+    path: "/",
+  };
 
   res.clearCookie("token", { ...base, httpOnly: true });
   res.clearCookie("session", base);

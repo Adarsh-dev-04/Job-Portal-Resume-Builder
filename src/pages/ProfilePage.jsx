@@ -16,7 +16,7 @@ import {
   LuX,
   LuPencil,
 } from "react-icons/lu";
-import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
+import { clearAuthState, deleteCookie, getCookie, setCookie } from "../utils/cookies";
 
 export default function ProfilePage() {
   const role = getCookie("role");
@@ -353,6 +353,7 @@ export default function ProfilePage() {
         deleteCookie("email");
         deleteCookie("userId");
         deleteCookie("companyName");
+        clearAuthState();
         window.location.href = "/";
       }
     } catch (error) {

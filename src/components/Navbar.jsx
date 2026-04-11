@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
-import { deleteCookie, getCookie } from "../utils/cookies";
+import { clearAuthState, deleteCookie, getCookie } from "../utils/cookies";
 import {
   LuMenu,
   LuX,
@@ -161,16 +161,11 @@ export default function Navbar() {
       deleteCookie("email");
       deleteCookie("userId");
       deleteCookie("companyName");
+      clearAuthState();
 
       // Backward-compat cleanup (old localStorage auth keys)
       try {
         localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("name");
-        localStorage.removeItem("email");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("companyName");
-        localStorage.removeItem("isVerified");
       } catch {
         // ignore
       }

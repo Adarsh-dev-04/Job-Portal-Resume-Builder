@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config";
+import { setAuthState } from "../utils/cookies";
 import {
   LuBriefcase,
   LuMail,
@@ -56,6 +57,16 @@ export default function LoginPage() {
         setIsSubmitting(false);
         return;
       }
+
+      setAuthState({
+        session: "1",
+        role: data?.role || "",
+        name: data?.name || "",
+        email: data?.email || email,
+        userId: data?.userId || "",
+        companyName: data?.companyName || "",
+        isVerified: data?.isVerified ? "true" : "false",
+      });
 
       showToast("Login successful!", "success");
 

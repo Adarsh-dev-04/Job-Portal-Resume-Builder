@@ -15,7 +15,7 @@ import {
   LuLock,
 } from "react-icons/lu";
 import toast from "react-hot-toast";
-import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
+import { clearAuthState, deleteCookie, getCookie, setCookie } from "../utils/cookies";
 
 export default function EmployerProfile() {
   const role = getCookie("role");
@@ -295,6 +295,7 @@ export default function EmployerProfile() {
         deleteCookie("email");
         deleteCookie("userId");
         deleteCookie("companyName");
+        clearAuthState();
         window.location.href = "/";
         return;
       }
