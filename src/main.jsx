@@ -30,8 +30,15 @@ import AdminApplications from "./pages/admin/AdminApplications.jsx";
 import AdminReports from "./pages/admin/AdminReports.jsx";
 import AdminProfile from "./pages/admin/AdminProfile.jsx";
 import EditJob from "./pages/EditJob.jsx";
+import logo from "./assets/logo.png";
 
 import "./index.css";
+
+const favicon = document.querySelector("link[rel='icon']");
+if (favicon) {
+  favicon.setAttribute("href", logo);
+  favicon.setAttribute("type", "image/png");
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

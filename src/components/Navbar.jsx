@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import { clearAuthState, deleteCookie, getCookie } from "../utils/cookies";
+import logo from "../assets/logo.png";
 import {
   LuMenu,
   LuX,
@@ -9,7 +10,6 @@ import {
   LuLogOut,
   LuLayoutDashboard,
   LuFileText,
-  LuBriefcase,
   LuPlus,
   LuBuilding2,
   LuMoon,
@@ -27,7 +27,9 @@ function getInitialTheme() {
   }
 
   if (typeof window !== "undefined" && window.matchMedia) {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
   }
 
   return "light";
@@ -61,7 +63,9 @@ export default function Navbar() {
   const [theme, setTheme] = useState(() => getInitialTheme());
   const isDark = theme === "dark";
 
-  const themeToggleAriaLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
+  const themeToggleAriaLabel = isDark
+    ? "Switch to light mode"
+    : "Switch to dark mode";
   const themeToggleTitle = themeToggleAriaLabel;
 
   function ThemeSwitch({ fullWidth = false }) {
@@ -189,11 +193,13 @@ export default function Navbar() {
 
   const navItems = [
     { to: "/", label: "Home", show: true },
-    { to: "/jobs", label: "Jobs", show: true },    { to: "/companies", label: "Companies", show: true },    { to: "/resume", label: "Resume Builder", show: role !== "employer" },
+    { to: "/jobs", label: "Jobs", show: true },
+    { to: "/companies", label: "Companies", show: true },
+    { to: "/resume", label: "Resume Builder", show: role !== "employer" },
     {
       to: role === "employer" ? "/employer-dashboard" : "/my-applications",
       label: "Dashboard",
-      show: role!== "admin",
+      show: role !== "admin",
     },
     { to: "/post-job", label: "Post Job", show: role === "employer" },
     { to: "/admin", label: "Admin Panel", show: role === "admin" },
@@ -206,12 +212,25 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 text-2xl font-black text-orange-600"
+            className="group flex items-center gap-3 rounded-2xl px-2 py-1.5 transition-all duration-300 "
           >
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-sm">
-              <LuBriefcase size={18} />
-            </span>
-            <span>JobNexus</span>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-orange-100 dark:from-black dark:to-stone-800 shadow-md shadow-orange-200 dark:shadow-orange-500 ring-1 ring-orange-200 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-orange-300
+            dark:group-hover:shadow-orange-500/50 group-hover:ring-orange-300">
+              <img
+                src={logo}
+                alt="JobNexus"
+                className="h-8 w-8 object-contain"
+              />
+            </div>
+
+            <div className="flex flex-col leading-none">
+              <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 bg-clip-text text-transparent">
+                JobNexus
+              </span>
+              <span className="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-orange-400">
+                Job Portal & Resume Builder
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
@@ -278,18 +297,22 @@ export default function Navbar() {
                       ) : (
                         <LuUser size={18} />
                       )}
-                      {role === "employer"
-                        ? "Company Profile"
-                        : "My Profile"}
+                      {role === "employer" ? "Company Profile" : "My Profile"}
                     </button>
 
                     <Link
-                      to={role === "employer" ? "/employer-dashboard" :role === 'candidate' ? "/my-applications" : "/admin"}
+                      to={
+                        role === "employer"
+                          ? "/employer-dashboard"
+                          : role === "candidate"
+                            ? "/my-applications"
+                            : "/admin"
+                      }
                       onClick={() => setProfileOpen(false)}
                       className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
                     >
                       <LuLayoutDashboard size={18} />
-                      {role=== 'admin' ? "Admin Panel" : "Dashboard"}
+                      {role === "admin" ? "Admin Panel" : "Dashboard"}
                     </Link>
 
                     {role === "candidate" && (
@@ -389,8 +412,12 @@ export default function Navbar() {
                       {(displayName || "U").charAt(0).toUpperCase()}
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-stone-900">{displayName}</p>
-                      <p className="text-xs capitalize text-stone-500">{role}</p>
+                      <p className="text-sm font-bold text-stone-900">
+                        {displayName}
+                      </p>
+                      <p className="text-xs capitalize text-stone-500">
+                        {role}
+                      </p>
                     </div>
                   </button>
 
