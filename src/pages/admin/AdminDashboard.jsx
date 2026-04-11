@@ -14,7 +14,6 @@ import {
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchDashboard();
@@ -23,9 +22,7 @@ export default function AdminDashboard() {
   async function fetchDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/admin/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const result = await res.json();

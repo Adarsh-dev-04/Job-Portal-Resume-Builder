@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import { useParams, useNavigate } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 import {
   LuUsers,
   LuMapPin,
@@ -23,7 +24,7 @@ export default function Applicants() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem("token");
+  const userId = getCookie("userId");
   const { jobId } = useParams();
   const navigate = useNavigate();
 
@@ -44,7 +45,7 @@ export default function Applicants() {
       const res = await fetch(
         `${API_BASE}/api/applications/job/${jobId}/applicants`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         }
       );
 
@@ -64,8 +65,8 @@ export default function Applicants() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ status }),
       });
 
@@ -83,8 +84,9 @@ export default function Applicants() {
 
   async function loadJobDetails(jobId) {
     try {
-      const res = await fetch(`${API_BASE}/api/jobs/employer/${localStorage.getItem("userId")}/job/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      if (!userId) return;
+      const res = await fetch(`${API_BASE}/api/jobs/employer/${userId}/job/${jobId}`, {
+        credentials: "include",
       });
       const job = await res.json();
       setJobDetails(job);
@@ -364,7 +366,7 @@ export default function Applicants() {
         {jobDetails?.description && (
           <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6 dark:border-stone-800 dark:bg-stone-900">
             <h2 className="mb-3 text-lg font-bold text-stone-900 dark:text-stone-50">Job Description</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-700 dark:text-stone-200">
+            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-stone-700 [overflow-wrap:anywhere] dark:text-stone-200">
               {jobDetails.description}
             </p>
           </div>
@@ -374,7 +376,7 @@ export default function Applicants() {
         {jobDetails?.additionalRequirements && (
           <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6 dark:border-stone-800 dark:bg-stone-900">
             <h2 className="mb-3 text-lg font-bold text-stone-900 dark:text-stone-50">Additional Requirements</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-700 dark:text-stone-200">
+            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-stone-700 [overflow-wrap:anywhere] dark:text-stone-200">
               {jobDetails.additionalRequirements}
             </p>
           </div>

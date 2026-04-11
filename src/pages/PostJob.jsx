@@ -8,11 +8,12 @@ import {
   LuCheck,
   LuTriangleAlert,
 } from "react-icons/lu";
+import { getCookie } from "../utils/cookies";
 
 const DRAFT_KEY = "jobnexus_postjob_draft_v2";
 
 export default function PostJob() {
-  const token = localStorage.getItem("token");
+  const session = getCookie("session");
 
   const defaultJob = {
     title: "",
@@ -87,7 +88,7 @@ export default function PostJob() {
     async function fetchProfile() {
       try {
         const res = await fetch(`${API_BASE}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
 
         if (res.ok) {
@@ -103,12 +104,12 @@ export default function PostJob() {
       }
     }
 
-    if (token) {
+    if (session) {
       fetchProfile();
     } else {
       setProfileLoading(false);
     }
-  }, [token]);
+  }, [session]);
 
   // ---------------- DRAFT RESTORE ----------------
   useEffect(() => {
@@ -414,8 +415,8 @@ export default function PostJob() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

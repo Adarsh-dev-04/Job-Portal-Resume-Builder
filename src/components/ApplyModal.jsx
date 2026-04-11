@@ -5,11 +5,9 @@ export default function ApplyModal({ jobId, onClose }) {
   const [resumes, setResumes] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  const token = localStorage.getItem("token");
-
   async function loadResumes() {
     const res = await fetch(`${API_BASE}/api/resumes`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
 
     const data = await res.json();
@@ -26,8 +24,8 @@ export default function ApplyModal({ jobId, onClose }) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({
         jobId,
         resumeId: selected,

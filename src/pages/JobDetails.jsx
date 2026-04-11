@@ -1,6 +1,7 @@
 import React from "react";
 import { API_BASE } from "../config.js";
 import { useParams, Link } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 import {
   LuMapPin,
   LuBuilding2,
@@ -34,8 +35,8 @@ const JobDetails = () => {
   const [pageError, setPageError] = React.useState("");
   const [toast, setToast] = React.useState(null);
 
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const session = getCookie("session");
+  const role = getCookie("role");
 
   function showToast(message, type = "success") {
     setToast({ message, type });
@@ -43,18 +44,14 @@ const JobDetails = () => {
   }
 
   async function loadResumeList() {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    if (!session) {
       setLoadingResumes(false);
       return;
     }
 
     try {
       const res = await fetch(`${API_BASE}/api/resumes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       let data;
@@ -198,9 +195,7 @@ const JobDetails = () => {
   }
 
   async function applyJob() {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    if (!session) {
       showToast("Please login to apply", "error");
       return;
     }
@@ -211,8 +206,8 @@ const JobDetails = () => {
     }
 
     const resumeId = selectedResume;
-    const email = localStorage.getItem("email");
-    const name = localStorage.getItem("name");
+    const email = getCookie("email");
+    const name = getCookie("name");
 
     if (!resumeId) {
       showToast("Please select a resume before applying", "error");
@@ -226,8 +221,8 @@ const JobDetails = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({
           jobId,
           resumeId,
@@ -258,9 +253,7 @@ const JobDetails = () => {
   }
 
   async function submitReport() {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    if (!session) {
       showToast("Please login to report a job", "error");
       return;
     }
@@ -283,8 +276,8 @@ const JobDetails = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ reason }),
       });
 
@@ -318,9 +311,9 @@ const JobDetails = () => {
     <div className="min-h-screen bg-stone-100">
       {/* Toast */}
       {toast && (
-        <div className="fixed right-4 top-4 z-50">
+        <div className="fixed left-4 right-4 top-4 z-50 sm:left-auto sm:right-4">
           <div
-            className={`min-w-[260px] rounded-2xl border px-4 py-3 shadow-lg ${
+            className={`w-full rounded-2xl border px-4 py-3 shadow-lg sm:min-w-[260px] ${
               toast.type === "success"
                 ? "border-green-200 bg-white text-green-700"
                 : "border-red-200 bg-white text-red-700"
@@ -403,19 +396,19 @@ const JobDetails = () => {
                       </h1>
 
                       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-stone-600">
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
                           <LuBuilding2 className="text-stone-400" />
                           <Link
                             to={`/company-profile/${encodeURIComponent(jobInfo.employerId)}`}
-                            className="font-medium transition hover:text-orange-600 hover:underline"
+                            className="min-w-0 truncate font-medium transition hover:text-orange-600 hover:underline"
                           >
                             {jobInfo.company}
                           </Link>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
                           <LuMapPin className="text-stone-400" />
-                          <span>{jobInfo.location}</span>
+                          <span className="min-w-0 truncate">{jobInfo.location}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -478,7 +471,7 @@ const JobDetails = () => {
               {/* Description */}
               <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-black text-stone-900">About this role</h2>
-                <p className="mt-4 whitespace-pre-line text-sm leading-7 text-stone-700">
+                <p className="mt-4 whitespace-pre-line break-words text-sm leading-7 text-stone-700 [overflow-wrap:anywhere]">
                   {jobInfo.description || "No description provided."}
                 </p>
               </section>
@@ -492,7 +485,7 @@ const JobDetails = () => {
                     {requirements.map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700"
+                        className="max-w-full break-words rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700"
                       >
                         {skill}
                       </span>
@@ -507,7 +500,7 @@ const JobDetails = () => {
                     <p className="text-sm font-semibold text-stone-800">
                       Additional requirements
                     </p>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">
+                    <p className="mt-2 break-words text-sm leading-7 text-stone-600 [overflow-wrap:anywhere]">
                       {jobInfo.additionalRequirements}
                     </p>
                   </div>
@@ -541,7 +534,7 @@ const JobDetails = () => {
 
             {/* Sticky apply card */}
             <aside className="space-y-6">
-              <div className="sticky top-24 space-y-6">
+              <div className="space-y-6 lg:sticky lg:top-24">
                 <section className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                   <h3 className="text-base font-black text-stone-900">Apply to this job</h3>
                   <p className="mt-1 text-sm text-stone-500">
@@ -549,7 +542,7 @@ const JobDetails = () => {
                   </p>
 
                   <div className="mt-5 space-y-4">
-                    {!token ? (
+                    {!session ? (
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                         <p className="text-sm font-medium text-amber-800">
                           Please login as a candidate to apply.
@@ -613,7 +606,7 @@ const JobDetails = () => {
                 </section>
 
                 {/* Report job */}
-                {token && role === "candidate" && (
+                {session && role === "candidate" && (
                   <section className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -668,10 +661,10 @@ const JobDetails = () => {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="flex items-center justify-between border-b border-stone-100 pb-2 last:border-b-0"
+                        className="flex min-w-0 items-center justify-between gap-3 border-b border-stone-100 pb-2 last:border-b-0"
                       >
-                        <span className="text-sm text-stone-500">{label}</span>
-                        <span className="max-w-[60%] text-right text-sm font-semibold text-stone-800">
+                        <span className="shrink-0 text-sm text-stone-500">{label}</span>
+                        <span className="min-w-0 max-w-[60%] truncate text-right text-sm font-semibold text-stone-800">
                           {value}
                         </span>
                       </div>

@@ -1,5 +1,9 @@
 
+import { getCookie } from "../../utils/cookies";
+
 export default function UserInfoModal({ setShowUserInfoModal, onDeleteAccount, setShowUpdateInfoModal, userName, userEmail, isLoggedIn}) {
+  const userId = getCookie("userId");
+
   return (
     <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center" onClick={()=> setShowUserInfoModal(false)}>
       <div className="relative bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onClick={(e)=>e.stopPropagation()}>
@@ -22,7 +26,7 @@ export default function UserInfoModal({ setShowUserInfoModal, onDeleteAccount, s
                   User ID:
                 </td>
                 <td className="bg-gray-200 pl-2 rounded-r-sm">
-                  {localStorage.getItem("userId") || "N/A"}
+                  {userId || "N/A"}
                 </td>
               </tr>
               <tr>

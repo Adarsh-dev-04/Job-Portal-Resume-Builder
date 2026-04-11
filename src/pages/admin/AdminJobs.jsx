@@ -10,8 +10,6 @@ import {
 } from "react-icons/lu";
 
 export default function AdminJobs() {
-  const token = localStorage.getItem("token");
-
   const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
   const [approvalStatus, setApprovalStatus] = useState("");
@@ -27,9 +25,7 @@ export default function AdminJobs() {
       if (approvalStatus) query.append("approvalStatus", approvalStatus);
 
       const res = await fetch(`${API_BASE}/api/admin/jobs?${query.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -51,8 +47,8 @@ export default function AdminJobs() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -76,9 +72,7 @@ export default function AdminJobs() {
     try {
       const res = await fetch(`${API_BASE}/api/admin/jobs/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();

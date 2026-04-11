@@ -3,8 +3,6 @@ import { API_BASE } from "../../config";
 import { LuSearch, LuTrash2, LuBadgeCheck, LuBan, LuShield } from "react-icons/lu";
 
 export default function AdminUsers() {
-  const token = localStorage.getItem("token");
-
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
@@ -20,9 +18,7 @@ export default function AdminUsers() {
       if (search) query.append("search", search);
 
       const res = await fetch(`${API_BASE}/api/admin/users?${query.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -43,8 +39,8 @@ export default function AdminUsers() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -67,9 +63,7 @@ export default function AdminUsers() {
     try {
       const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();

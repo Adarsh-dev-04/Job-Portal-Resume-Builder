@@ -16,10 +16,10 @@ import {
   LuX,
   LuPencil,
 } from "react-icons/lu";
+import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
 
 export default function ProfilePage() {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const role = getCookie("role");
 
   const [form, setForm] = useState({
     name: "",
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   async function fetchProfile() {
     try {
       const res = await fetch(`${API_BASE}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       let data;
@@ -169,8 +169,8 @@ export default function ProfilePage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -189,7 +189,7 @@ export default function ProfilePage() {
       if (data?.user?.email) {
         setForm((prev) => ({ ...prev, email: data.user.email }));
         setOriginalForm((prev) => (prev ? { ...prev, email: data.user.email } : prev));
-        localStorage.setItem("email", data.user.email);
+        setCookie("email", data.user.email);
         setCredentialForm((prev) => ({ ...prev, email: data.user.email }));
       }
 
@@ -280,8 +280,8 @@ export default function ProfilePage() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             ...form,
             password,
@@ -305,7 +305,8 @@ export default function ProfilePage() {
         };
 
         setOriginalForm(updatedForm);
-        localStorage.setItem("name", data.user?.name || form.name);
+        setCookie("name", data.user?.name || form.name);
+        if (data.user?.email) setCookie("email", data.user.email);
         showToast(data?.message || "Profile updated successfully!", "success");
 
         setIsEditMode(false);
@@ -320,8 +321,8 @@ export default function ProfilePage() {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ password }),
         });
 
@@ -337,7 +338,21 @@ export default function ProfilePage() {
           return;
         }
 
-        localStorage.clear();
+        try {
+          await fetch(`${API_BASE}/api/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch {
+          // ignore
+        }
+
+        deleteCookie("session");
+        deleteCookie("role");
+        deleteCookie("name");
+        deleteCookie("email");
+        deleteCookie("userId");
+        deleteCookie("companyName");
         window.location.href = "/";
       }
     } catch (error) {

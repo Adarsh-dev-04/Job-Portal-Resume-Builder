@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { API_BASE } from "../config.js";
+import { getCookie } from "../utils/cookies";
 import {
   LuUser,
   LuGraduationCap,
@@ -158,9 +159,8 @@ export default function ResumeForm({
   }
 
   async function saveResume() {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    const session = getCookie("session");
+    if (!session) {
       toast.error("Please login to save your resume");
       return;
     }
@@ -177,9 +177,8 @@ export default function ResumeForm({
   }
 
   async function actuallySaveResume(title) {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    const session = getCookie("session");
+    if (!session) {
       toast.error("You are not logged in");
       return;
     }
@@ -196,8 +195,8 @@ export default function ResumeForm({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({
           resumeId: currentResumeId,
           title: title.trim(),

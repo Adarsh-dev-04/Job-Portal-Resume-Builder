@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../config";
 
 export default function AdminReports() {
-  const token = localStorage.getItem("token");
-
   const [reports, setReports] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,9 +19,7 @@ export default function AdminReports() {
       if (status) query.append("status", status);
 
       const res = await fetch(`${API_BASE}/api/admin/reports?${query.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -47,8 +43,8 @@ export default function AdminReports() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -71,8 +67,8 @@ export default function AdminReports() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

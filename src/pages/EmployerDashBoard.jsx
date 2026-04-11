@@ -5,6 +5,7 @@ import { FaUser } from "react-icons/fa6";
 import { IoMdTime } from "react-icons/io";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 
 export default function EmployerDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -21,14 +22,13 @@ export default function EmployerDashboard() {
     acceptedCreated: 0,
   });
 
-
-  const token = localStorage.getItem("token");
+  const userId = getCookie("userId");
 
   async function loadDashboardData() {
     const res = await fetch(
-      `${API_BASE}/api/applications/employer/${localStorage.getItem("userId")}/jobs`,
+      `${API_BASE}/api/applications/employer/${userId}/jobs`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       },
     );
 
@@ -39,7 +39,7 @@ export default function EmployerDashboard() {
       const res = await fetch(
         `${API_BASE}/api/applications/job/${job._id}/applicants`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         },
       );
       const apps = await res.json();
@@ -87,14 +87,15 @@ export default function EmployerDashboard() {
   async function closeHandler(jobId) {
     await fetch(`${API_BASE}/api/jobs/${jobId}/close`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
     loadDashboardData();
   }
 
   useEffect(() => {
+    if (!userId) return;
     loadDashboardData();
-  }, []);
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-stone-100 px-10 py-8 text-stone-900 dark:bg-stone-950 dark:text-stone-50">

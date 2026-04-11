@@ -3,12 +3,15 @@ import { Link, useParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import { useEffect, useState } from "react";
 import ResumePreview from "../components/ResumePreview.jsx";
+import { getCookie } from "../utils/cookies";
 
 export default function ResumePreviewPage() {
   const { resumeId } = useParams();
   const [resumeData, setResumeData] = useState(null);
   const [error, setError] = useState(null);
   const [zoom, setZoom] = useState(100);
+  const role = getCookie("role");
+  const isCandidateView = role === "candidate";
 
   useEffect(() => {
     fetchResume();
@@ -16,10 +19,9 @@ export default function ResumePreviewPage() {
 
   async function fetchResume() {
     try {
-      const token = localStorage.getItem("token");
-      // Uses the new secure employer-authorized route — no impersonation needed
+      // Uses the secure route; authorization comes from the httpOnly cookie
       const res = await fetch(`${API_BASE}/api/applications/resume/${resumeId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -45,6 +47,8 @@ export default function ResumePreviewPage() {
   const candidateEmail =
     context?.candidate?.email || resumeData?.data?.email || "";
   const job = context?.job;
+  const application = context?.application;
+  const jobIdForLinks = job?.id || job?._id;
 
   function formatDateTime(value) {
     if (!value) return "N/A";
@@ -92,10 +96,14 @@ export default function ResumePreviewPage() {
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{error}</p>
           <div className="mt-5">
             <Link
-              to="/employer-dashboard"
-              className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-bold text-stone-700 transition hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+              to={isCandidateView ? "/my-applications" : "/employer-dashboard"}
+              className={
+                isCandidateView
+                  ? "inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-500 hover:text-white dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200"
+                  : "inline-flex items-center justify-center rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-bold text-stone-700 transition hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+              }
             >
-              Back to Dashboard
+              {isCandidateView ? "Back to My Applications" : "Back to Dashboard"}
             </Link>
           </div>
         </div>
@@ -110,10 +118,10 @@ export default function ResumePreviewPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-                Employer Resume View
+                {isCandidateView ? "Application Resume" : "Employer Resume View"}
               </p>
               <h1 className="mt-1 truncate text-xl font-extrabold text-stone-900 dark:text-stone-50">
-                {candidateName}
+                {isCandidateView ? (resumeData?.title || "Resume") : candidateName}
               </h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {context?.application?.status && (
@@ -133,21 +141,41 @@ export default function ResumePreviewPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {job?.id && (
+              {jobIdForLinks && !isCandidateView && (
                 <Link
-                  to={`/employer-dashboard/applicants/${job.id}`}
+                  to={`/employer-dashboard/applicants/${jobIdForLinks}`}
                   className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-bold text-stone-700 transition hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
                 >
                   Back to Applicants
                 </Link>
               )}
 
-              <Link
-                to="/employer-dashboard"
-                className="inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-500 hover:text-white dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200"
-              >
-                Dashboard
-              </Link>
+              {isCandidateView && (
+                <Link
+                  to="/my-applications"
+                  className="inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-500 hover:text-white dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200"
+                >
+                  Back to My Applications
+                </Link>
+              )}
+
+              {isCandidateView && jobIdForLinks && (
+                <Link
+                  to={`/jobs/${jobIdForLinks}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-500 hover:text-white dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200"
+                >
+                  View Job
+                </Link>
+              )}
+
+              {!isCandidateView && (
+                <Link
+                  to="/employer-dashboard"
+                  className="inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-500 hover:text-white dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200"
+                >
+                  Dashboard
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -156,51 +184,68 @@ export default function ResumePreviewPage() {
           <aside className="lg:col-span-4">
             <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
               <h2 className="text-sm font-extrabold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-                Details
+                {isCandidateView ? "Application details" : "Details"}
               </h2>
 
               <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-xs font-bold text-stone-500 dark:text-stone-400">
-                    Candidate
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-50">
-                    {candidateName}
-                  </p>
-                  {candidateEmail ? (
-                    <p className="mt-1 break-all text-sm text-stone-600 dark:text-stone-300">
-                      {candidateEmail}
+                {!isCandidateView && (
+                  <div>
+                    <p className="text-xs font-bold text-stone-500 dark:text-stone-400">
+                      Candidate
                     </p>
-                  ) : null}
-                </div>
+                    <p className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-50">
+                      {candidateName}
+                    </p>
+                    {candidateEmail ? (
+                      <p className="mt-1 break-all text-sm text-stone-600 dark:text-stone-300">
+                        {candidateEmail}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
 
-                <div>
-                  <p className="text-xs font-bold text-stone-500 dark:text-stone-400">
-                    Application
-                  </p>
-                  <div className="mt-2 grid gap-2 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm dark:border-stone-800 dark:bg-stone-950">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-stone-500 dark:text-stone-400">Status</span>
-                      <span className="font-semibold text-stone-900 dark:text-stone-50">
-                        {context?.application?.status
-                          ? statusMeta.label
-                          : "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-stone-500 dark:text-stone-400">Applied</span>
-                      <span className="font-semibold text-stone-900 dark:text-stone-50">
-                        {formatDateTime(context?.application?.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-stone-500 dark:text-stone-400">Reviewed</span>
-                      <span className="font-semibold text-stone-900 dark:text-stone-50">
-                        {formatDateTime(context?.application?.reviewedAt)}
-                      </span>
+                {application ? (
+                  <div>
+                    <p className="text-xs font-bold text-stone-500 dark:text-stone-400">
+                      Application
+                    </p>
+
+                    <div className="mt-2 grid gap-2 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm dark:border-stone-800 dark:bg-stone-950">
+                      {application.status ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Status</span>
+                          <span className="font-semibold text-stone-900 dark:text-stone-50">
+                            {statusMeta.label}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {application.createdAt ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Applied</span>
+                          <span className="font-semibold text-stone-900 dark:text-stone-50">
+                            {formatDateTime(application.createdAt)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {!isCandidateView && application.reviewedAt ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Reviewed</span>
+                          <span className="font-semibold text-stone-900 dark:text-stone-50">
+                            {formatDateTime(application.reviewedAt)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {!application.status && !application.createdAt && (!application.reviewedAt || isCandidateView) ? (
+                        <div className="text-sm font-semibold text-stone-600 dark:text-stone-300">
+                          Application details unavailable.
+                        </div>
+                      ) : null}
                     </div>
                   </div>
-                </div>
+                ) : null}
 
                 {job ? (
                   <div>
@@ -208,24 +253,33 @@ export default function ResumePreviewPage() {
                       Job
                     </p>
                     <div className="mt-2 grid gap-2 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm dark:border-stone-800 dark:bg-stone-950">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-stone-500 dark:text-stone-400">Title</span>
-                        <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
-                          {job.title || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-stone-500 dark:text-stone-400">Company</span>
-                        <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
-                          {job.company || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-stone-500 dark:text-stone-400">Location</span>
-                        <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
-                          {job.location || "N/A"}
-                        </span>
-                      </div>
+                      {job.title ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Title</span>
+                          <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
+                            {job.title}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {job.company ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Company</span>
+                          <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
+                            {job.company}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {job.location ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-stone-500 dark:text-stone-400">Location</span>
+                          <span className="text-right font-semibold text-stone-900 dark:text-stone-50">
+                            {job.location}
+                          </span>
+                        </div>
+                      ) : null}
+
                       {(job.type || job.workMode) && (
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-stone-500 dark:text-stone-400">Type</span>
@@ -234,6 +288,12 @@ export default function ResumePreviewPage() {
                           </span>
                         </div>
                       )}
+
+                      {!job.title && !job.company && !job.location && !job.type && !job.workMode ? (
+                        <div className="text-sm font-semibold text-stone-600 dark:text-stone-300">
+                          Job details unavailable.
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -258,7 +318,8 @@ export default function ResumePreviewPage() {
                   </div>
                 </div>
 
-                {typeof context?.application?.employerNotes === "string" &&
+                {!isCandidateView &&
+                typeof context?.application?.employerNotes === "string" &&
                 context.application.employerNotes.trim() ? (
                   <div>
                     <p className="text-xs font-bold text-stone-500 dark:text-stone-400">

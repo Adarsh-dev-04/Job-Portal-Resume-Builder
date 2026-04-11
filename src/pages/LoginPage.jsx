@@ -40,6 +40,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -54,18 +55,6 @@ export default function LoginPage() {
         showToast(data.message || "Login failed", "error");
         setIsSubmitting(false);
         return;
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("name", data.name);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("email", data.email);
-
-      // optional new fields if backend sends them
-      if (data.companyName) localStorage.setItem("companyName", data.companyName);
-      if (data.isVerified !== undefined) {
-        localStorage.setItem("isVerified", String(data.isVerified));
       }
 
       showToast("Login successful!", "success");

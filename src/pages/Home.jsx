@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import { Link, useNavigate } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 import {
   LuSearch,
   LuMapPin,
@@ -26,8 +27,8 @@ export default function Home() {
   const [jobsError, setJobsError] = useState("");
 
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
-  const userName = localStorage.getItem("name");
+  const role = getCookie("role");
+  const userName = getCookie("name");
 
   useEffect(() => {
     loadFeaturedJobs();
@@ -143,7 +144,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             {/* Left */}
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-orange-700 shadow-sm">
+              <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-orange-700 shadow-sm">
                 <LuSparkles size={14} />
                 Smart Job Search + Resume Builder
               </div>
@@ -185,7 +186,7 @@ export default function Home() {
 
                   <button
                     onClick={handleSearch}
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 text-sm font-bold text-white transition hover:bg-orange-600"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 text-sm font-bold text-white transition hover:bg-orange-600 lg:w-auto"
                   >
                     <LuSearch size={16} />
                     Search Jobs
@@ -214,10 +215,12 @@ export default function Home() {
 
               {/* Welcome chip */}
               {userName && (
-                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-600 shadow-sm">
-                  <LuBadgeCheck size={14} className="text-green-600" />
-                  Welcome back, {userName}
-                  {role ? ` (${role})` : ""}
+                <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-600 shadow-sm">
+                  <LuBadgeCheck size={14} className="shrink-0 text-green-600" />
+                  <span className="min-w-0 truncate">
+                    Welcome back, {userName}
+                    {role ? ` (${role})` : ""}
+                  </span>
                 </div>
               )}
             </div>
@@ -297,7 +300,7 @@ export default function Home() {
 
           <Link
             to="/jobs"
-            className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
+            className="inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50 dark:hover:border-orange-400/60 dark:hover:bg-orange-500/10"
           >
             View all jobs
             <LuChevronRight size={16} />
@@ -447,7 +450,7 @@ export default function Home() {
 
                     <button
                       onClick={() => navigate(`/jobs?title=${encodeURIComponent(job.title || "")}`)}
-                      className="inline-flex items-center justify-center rounded-2xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
+                      className="inline-flex items-center justify-center rounded-2xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50 dark:hover:border-orange-400/60 dark:hover:bg-orange-500/10"
                     >
                       Similar
                     </button>
@@ -485,7 +488,7 @@ export default function Home() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   to="/resume"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600 sm:w-auto"
                 >
                   Build My Resume
                   <LuChevronRight size={16} />
@@ -493,7 +496,7 @@ export default function Home() {
 
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-700 bg-stone-800 px-6 py-3 text-sm font-semibold text-stone-200 transition hover:bg-stone-700"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-700 bg-stone-800 px-6 py-3 text-sm font-semibold text-stone-200 transition hover:bg-stone-700 sm:w-auto"
                 >
                   Explore Jobs
                 </Link>
@@ -573,7 +576,7 @@ export default function Home() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/jobs"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-600 sm:w-auto"
               >
                 Browse Jobs
                 <LuChevronRight size={16} />
@@ -581,7 +584,7 @@ export default function Home() {
 
               <Link
                 to="/resume"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-200 hover:bg-orange-50 sm:w-auto"
               >
                 Build Resume
               </Link>

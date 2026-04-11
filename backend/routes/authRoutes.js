@@ -10,6 +10,12 @@ router.post("/register", authController.register);
 // Login user
 router.post("/login", authController.login);
 
+// Current user (protected)
+router.get("/me", auth, authController.me);
+
+// Logout (clears cookies)
+router.post("/logout", authController.logout);
+
 // Verify password (protected)
 router.post("/verify-password", auth, authController.verifyPassword);
 

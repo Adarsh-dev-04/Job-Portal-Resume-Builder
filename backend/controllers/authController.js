@@ -97,8 +97,29 @@ exports.login = async (req, res) => {
       { expiresIn: "7d" },
     );
 
+    const maxAgeMs = 7 * 24 * 60 * 60 * 1000;
+    const secure = process.env.NODE_ENV === "production";
+    const baseCookie = {
+      sameSite: "lax",
+      secure,
+      maxAge: maxAgeMs,
+      path: "/",
+    };
+
+    // Auth cookie: httpOnly so JS can't read it
+    res.cookie("token", token, { ...baseCookie, httpOnly: true });
+
+    // UI cookies (not security sensitive; server still authorizes via JWT)
+    res.cookie("session", "1", { ...baseCookie, httpOnly: false });
+    res.cookie("role", user.role, { ...baseCookie, httpOnly: false });
+    res.cookie("name", user.name || "", { ...baseCookie, httpOnly: false });
+    res.cookie("email", user.email || "", { ...baseCookie, httpOnly: false });
+    res.cookie("userId", String(user._id), { ...baseCookie, httpOnly: false });
+    res.cookie("companyName", user.companyName || "", { ...baseCookie, httpOnly: false });
+
     res.json({
       message: "Login successful",
+      // token is also set as an httpOnly cookie; keep returning it for backward compatibility
       token,
       userId: user._id,
       name: user.name,
@@ -111,6 +132,34 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Login failed" });
+  }
+};
+
+/* ================= LOGOUT ================= */
+exports.logout = async (req, res) => {
+  const secure = process.env.NODE_ENV === "production";
+  const base = { sameSite: "lax", secure, path: "/" };
+
+  res.clearCookie("token", { ...base, httpOnly: true });
+  res.clearCookie("session", base);
+  res.clearCookie("role", base);
+  res.clearCookie("name", base);
+  res.clearCookie("email", base);
+  res.clearCookie("userId", base);
+  res.clearCookie("companyName", base);
+
+  res.json({ message: "Logged out" });
+};
+
+/* ================= ME ================= */
+exports.me = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ user });
+  } catch (err) {
+    console.error("Me endpoint error:", err);
+    res.status(500).json({ message: "Failed to load user" });
   }
 };
 /* ================= UPDATE USER CREDENTIALS ================= */

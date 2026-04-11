@@ -2,7 +2,8 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
+const connectDB = require("./config/db");
 const jobRoutes = require("./routes/jobRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -13,6 +14,9 @@ const userController = require("./controllers/userController");
 
 const app = express();
 
+// Needed for secure cookies behind proxies (Vercel/Render/etc.)
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: true,
@@ -22,12 +26,13 @@ app.use(
   }),
 );
 
+app.use(cookieParser());
 app.use(express.json());
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("DB error:", err));
+connectDB().catch(() => {
+  // If DB connection fails, exit so the app doesn't run half-alive.
+  process.exit(1);
+});
 
 app.get("/", (req, res) => {
   res.send("Backend is running");

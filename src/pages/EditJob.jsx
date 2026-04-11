@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import { useParams, useNavigate } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 import {
   LuInfo,
   LuPlus,
@@ -12,8 +13,7 @@ import {
 } from "react-icons/lu";
 
 export default function EditJob() {
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
+  const userId = getCookie("userId");
   const { jobId } = useParams();
   const navigate = useNavigate();
 
@@ -96,7 +96,7 @@ export default function EditJob() {
         const res = await fetch(
           `${API_BASE}/api/jobs/employer/${userId}/job/${jobId}`,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           }
         );
 
@@ -146,10 +146,10 @@ export default function EditJob() {
       }
     }
 
-    if (token && userId && jobId) {
+    if (userId && jobId) {
       loadJob();
     }
-  }, [token, userId, jobId, navigate]);
+  }, [userId, jobId, navigate]);
 
   // ================= HANDLERS =================
   function handleChange(e) {
@@ -315,8 +315,8 @@ export default function EditJob() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ password: passwordInput }),
       });
 
@@ -356,8 +356,8 @@ export default function EditJob() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

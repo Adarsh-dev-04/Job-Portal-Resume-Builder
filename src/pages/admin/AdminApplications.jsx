@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../config";
 
 export default function AdminApplications() {
-  const token = localStorage.getItem("token");
   const [applications, setApplications] = useState([]);
   const [status, setStatus] = useState("");
 
@@ -16,9 +15,7 @@ export default function AdminApplications() {
       if (status) query.append("status", status);
 
       const res = await fetch(`${API_BASE}/api/admin/applications?${query.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();

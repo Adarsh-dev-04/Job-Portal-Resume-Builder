@@ -10,7 +10,6 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-@import "tailwindcss";
 * {
   font-family: "Inter", "CMU Serif Roman", serif;
 }
@@ -29,68 +28,10 @@
   margin-bottom: 1.5rem;
 }
 
-.container{
-  width: 100%;
-}
-/* Mobile responsive improvements */
-@media (max-width: 1280px) {
-  .xl\:flex-row {
-    flex-direction: column !important;
-  }
-
-  .xl\:w-1\/2 {
-    width: 100% !important;
-  }
-}
-
-@media (max-width: 1024px) {
-  .lg\:flex-row {
-    flex-direction: column !important;
-  }
-
-  .lg\:w-1\/2 {
-    width: 100% !important;
-  }
-
-  .lg\:border-r {
-    border-right: none !important;
-    border-bottom: 1px solid #d1d5db;
-  }
-}
-
-/* Ensure form inputs are properly sized on mobile */
 @media (max-width: 768px) {
-  .md\:grid-cols-2 {
-    grid-template-columns: 1fr !important;
-  }
-
   input,
   textarea {
     font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  /* Improve mobile spacing */
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .sm\:text-3xl {
-    font-size: 1.5rem !important;
-  }
-
-  .sm\:text-2xl {
-    font-size: 1.25rem !important;
-  }
-
-  .sm\:flex-row {
-    flex-direction: column !important;
-  }
-
-  .sm\:justify-between {
-    justify-content: flex-start !important;
   }
 }
 

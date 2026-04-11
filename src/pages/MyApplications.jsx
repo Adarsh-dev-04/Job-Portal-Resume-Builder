@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 import { Link } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 import {
   LuBriefcase,
   LuSearch,
@@ -26,8 +27,7 @@ export default function MyApplications() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [toast, setToast] = useState(null);
 
-  const token = localStorage.getItem("token");
-  const name = localStorage.getItem("name") || "Candidate";
+  const name = getCookie("name") || "Candidate";
 
   useEffect(() => {
     fetchApplications();
@@ -44,9 +44,7 @@ export default function MyApplications() {
 
     try {
       const res = await fetch(`${API_BASE}/api/applications/my`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       let data;
@@ -166,6 +164,97 @@ export default function MyApplications() {
 
     return result;
   }, [applications, search, statusFilter]);
+
+  function renderTimeline(statusValue) {
+    const normalized = (statusValue || "pending").toLowerCase();
+    const isAccepted = normalized === "accepted";
+    const isRejected = normalized === "rejected";
+    const outcomeLabel = isAccepted
+      ? "Accepted"
+      : isRejected
+        ? "Rejected"
+        : "Accepted / Rejected";
+
+    const progressPercent = isAccepted || isRejected ? 100 : 50;
+
+    return (
+      <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+          Timeline
+        </p>
+
+        <div className="relative mt-4">
+          {/* Track */}
+          <div className="absolute left-0 right-0 top-[10px] h-1 rounded-full bg-stone-200 dark:bg-stone-800" />
+          {/* Progress */}
+          <div
+            className="absolute left-0 top-[10px] h-1 rounded-full bg-orange-500"
+            style={{ width: `${progressPercent}%` }}
+          />
+
+          <div className="relative flex items-start justify-between">
+            {/* Applied */}
+            <div className="flex flex-col items-start">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-500 ring-4 ring-stone-50 dark:ring-stone-950">
+                <div className="h-2.5 w-2.5 rounded-full bg-white" />
+              </div>
+              <p className="mt-2 text-sm font-semibold text-orange-600 dark:text-orange-300">
+                Applied
+              </p>
+            </div>
+
+            {/* Pending */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-stone-50 dark:ring-stone-950 ${
+                  isAccepted || isRejected
+                    ? "bg-orange-500"
+                    : "bg-orange-500"
+                }`}
+              >
+                <div className="h-2.5 w-2.5 rounded-full bg-white" />
+              </div>
+              <p
+                className={`mt-2 text-sm font-semibold ${
+                  isAccepted || isRejected
+                    ? "text-orange-600 dark:text-orange-300"
+                    : "text-orange-600 dark:text-orange-300"
+                }`}
+              >
+                Pending
+              </p>
+            </div>
+
+            {/* Outcome */}
+            <div className="flex flex-col items-end">
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-stone-50 dark:ring-stone-950 ${
+                  isAccepted
+                    ? "bg-green-500"
+                    : isRejected
+                      ? "bg-red-500"
+                      : "bg-stone-300 dark:bg-stone-700"
+                }`}
+              >
+                <div className="h-2.5 w-2.5 rounded-full bg-white" />
+              </div>
+              <p
+                className={`mt-2 text-sm font-semibold ${
+                  isAccepted
+                    ? "text-green-700 dark:text-green-200"
+                    : isRejected
+                      ? "text-red-700 dark:text-red-200"
+                      : "text-stone-400 dark:text-stone-500"
+                }`}
+              >
+                {outcomeLabel}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-100 dark:bg-stone-950">
@@ -444,6 +533,8 @@ export default function MyApplications() {
                             </p>
                           </div>
                         </div>
+
+                        {renderTimeline(app.status)}
                       </div>
 
                       {/* Right */}

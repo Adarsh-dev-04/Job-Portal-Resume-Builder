@@ -1,4 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE } from "../../config";
+import { deleteCookie } from "../../utils/cookies";
 import {
   LuLayoutDashboard,
   LuUsers,
@@ -21,8 +23,31 @@ export default function AdminLayout() {
     { label: "Reports", path: "/admin/reports", icon: <LuTriangleAlert size={18} /> },
   ];
 
-  function logout() {
-    localStorage.clear();
+  async function logout() {
+    try {
+      await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // ignore
+    }
+
+    deleteCookie("session");
+    deleteCookie("role");
+    deleteCookie("name");
+    deleteCookie("email");
+    deleteCookie("userId");
+    deleteCookie("companyName");
+
+    // Clean up legacy storage keys without nuking theme/drafts.
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("companyName");
+
     navigate("/login");
     window.location.reload();
   }

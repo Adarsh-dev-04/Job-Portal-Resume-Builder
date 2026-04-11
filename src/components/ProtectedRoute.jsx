@@ -1,10 +1,11 @@
 import { Navigate } from "react-router-dom";
+import { getCookie } from "../utils/cookies";
 
 export default function ProtectedRoute({ children, role }) {
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role");
+  const isLoggedIn = Boolean(getCookie("session"));
+  const userRole = getCookie("role");
 
-  if (!token) {
+  if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 

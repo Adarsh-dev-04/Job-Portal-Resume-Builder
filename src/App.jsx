@@ -6,6 +6,7 @@ import "./App.css";
 import PDFDownloadButton from "./components/PDFDownloadButton.jsx";
 import { details } from "./Data.js";
 import { API_BASE } from "./config.js";
+import { getCookie } from "./utils/cookies.js";
 import toast from "react-hot-toast";
 import DeleteConfirmationModal from "./components/Modals/DeleteConfirmationModal.jsx";
 import {
@@ -52,8 +53,8 @@ const App = () => {
   const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] =
     useState(false);
 
-  const isLoggedIn = !!localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const isLoggedIn = Boolean(getCookie("session"));
+  const role = getCookie("role");
 
   const selectedLayout =
     typeof formData?.layout === "string" && formData.layout.trim()
@@ -70,14 +71,11 @@ const App = () => {
   /* ================= LOAD RESUMES ================= */
 
   async function loadResumeList() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!isLoggedIn) return;
 
     try {
       const res = await fetch(`${API_BASE}/api/resumes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -90,14 +88,11 @@ const App = () => {
   }
 
   async function loadSingleResume(resumeId) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!isLoggedIn) return;
 
     try {
       const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       const resume = await res.json();
@@ -137,8 +132,8 @@ const App = () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
+        credentials: "include",
         body: JSON.stringify({ title: newTitle.trim() }),
       });
 
@@ -165,9 +160,7 @@ const App = () => {
     try {
       const res = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        credentials: "include",
       });
 
       if (!res.ok) {

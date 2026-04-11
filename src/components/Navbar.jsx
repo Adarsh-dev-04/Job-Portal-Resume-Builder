@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../config";
+import { deleteCookie, getCookie } from "../utils/cookies";
 import {
   LuMenu,
   LuX,
@@ -48,11 +50,10 @@ function persistTheme(theme) {
 export default function Navbar() {
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
-  const userName = localStorage.getItem("name");
-  const companyName = localStorage.getItem("companyName");
-  const isLoggedIn = !!token;
+  const role = getCookie("role");
+  const userName = getCookie("name");
+  const companyName = getCookie("companyName");
+  const isLoggedIn = Boolean(getCookie("session"));
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -144,26 +145,38 @@ export default function Navbar() {
     return userName || "User";
   }, [role, companyName, userName]);
 
-  function handleLogout() {
-    const preservedTheme = (() => {
-      try {
-        return localStorage.getItem(THEME_KEY);
-      } catch {
-        return null;
-      }
-    })();
+  async function handleLogout() {
+    try {
+      await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // ignore
+    } finally {
+      // Best-effort cleanup for UI cookies (httpOnly token is cleared server-side)
+      deleteCookie("session");
+      deleteCookie("role");
+      deleteCookie("name");
+      deleteCookie("email");
+      deleteCookie("userId");
+      deleteCookie("companyName");
 
-    localStorage.clear();
-
-    if (preservedTheme === "dark" || preservedTheme === "light") {
+      // Backward-compat cleanup (old localStorage auth keys)
       try {
-        localStorage.setItem(THEME_KEY, preservedTheme);
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("name");
+        localStorage.removeItem("email");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("companyName");
+        localStorage.removeItem("isVerified");
       } catch {
         // ignore
       }
-    }
 
-    window.location.href = "/";
+      window.location.href = "/";
+    }
   }
 
   function goToProfile() {

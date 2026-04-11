@@ -15,10 +15,10 @@ import {
   LuLock,
 } from "react-icons/lu";
 import toast from "react-hot-toast";
+import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
 
 export default function EmployerProfile() {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const role = getCookie("role");
 
   const [form, setForm] = useState({
     name: "",
@@ -80,7 +80,7 @@ export default function EmployerProfile() {
   async function fetchProfile() {
     try {
       const res = await fetch(`${API_BASE}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       let data;
@@ -175,8 +175,8 @@ export default function EmployerProfile() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -194,7 +194,7 @@ export default function EmployerProfile() {
 
       if (data?.user?.email) {
         setForm((prev) => ({ ...prev, email: data.user.email }));
-        localStorage.setItem("email", data.user.email);
+        setCookie("email", data.user.email);
         setCredentialForm((prev) => ({ ...prev, email: data.user.email }));
       }
 
@@ -262,8 +262,8 @@ export default function EmployerProfile() {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ password }),
         });
 
@@ -280,7 +280,21 @@ export default function EmployerProfile() {
         }
 
         toast.success(data?.message || "Account deleted successfully");
-        localStorage.clear();
+        try {
+          await fetch(`${API_BASE}/api/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch {
+          // ignore
+        }
+
+        deleteCookie("session");
+        deleteCookie("role");
+        deleteCookie("name");
+        deleteCookie("email");
+        deleteCookie("userId");
+        deleteCookie("companyName");
         window.location.href = "/";
         return;
       }
@@ -292,8 +306,8 @@ export default function EmployerProfile() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             ...form,
             password,
@@ -313,6 +327,9 @@ export default function EmployerProfile() {
         }
 
         toast.success(data?.message || "Profile updated successfully");
+        if (form?.name) setCookie("name", form.name);
+        if (form?.email) setCookie("email", form.email);
+        if (form?.companyName) setCookie("companyName", form.companyName);
         setShowPasswordModal(false);
         setPasswordInput("");
         setPasswordAction(null);
