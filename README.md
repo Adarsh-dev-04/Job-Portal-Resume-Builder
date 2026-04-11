@@ -430,6 +430,54 @@ Planned enhancements for future versions:
 
 ## Screenshots
 
+### Home Page (Light)
+![Home Page (Light)](docs/screenshots/01-home-light.png)
+
+### Jobs Page
+![Jobs Page](docs/screenshots/02-jobs.png)
+
+### Companies Page
+![Companies Page](docs/screenshots/03-companies.png)
+
+### Company Profile Page
+![Company Profile Page](docs/screenshots/04-company-profile.png)
+
+### Login Page
+![Login Page](docs/screenshots/05-login.png)
+
+### Resume Builder Page
+![Resume Builder Page](docs/screenshots/06-resume-builder.png)
+
+### Admin Dashboard Page
+![Admin Dashboard Page](docs/screenshots/07-admin-dashboard.png)
+
+### Job Details Page
+![Job Details Page](docs/screenshots/08-job-details.png)
+
+### Employer: Post Job Page
+![Employer Post Job Page](docs/screenshots/09-employer-post-job.png)
+
+### Home Page (Dark)
+![Home Page (Dark)](docs/screenshots/10-home-dark.png)
+
+### Employer Dashboard Page
+![Employer Dashboard Page](docs/screenshots/11-employer-dashboard.png)
+
+### Employer: Job Applicants Page
+![Employer Job Applicants Page](docs/screenshots/12-employer-job-applicants.png)
+
+### Employer: Applicants List Page
+![Employer Applicants List Page](docs/screenshots/13-employer-applicants-list.png)
+
+### Candidate Dashboard: My Applications Page
+![Candidate Dashboard - My Applications Page](docs/screenshots/14-candidate-dashboard-applications.png)
+
+### Candidate Applications Timeline Page
+![Candidate Applications Timeline Page](docs/screenshots/15-candidate-applications-timeline.png)
+
+### Candidate Profile Page
+![Candidate Profile Page](docs/screenshots/16-candidate-profile.png)
+
 
 ## Why I Built This
 
