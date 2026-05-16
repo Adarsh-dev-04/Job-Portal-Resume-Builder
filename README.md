@@ -189,6 +189,10 @@ backend/
 - `Resume`
 - `JobReport`
 
+### ER Diagram
+
+- Mermaid ERD (versioned in repo): `docs/ERD.md`
+
 ---
 
 ## API Modules
